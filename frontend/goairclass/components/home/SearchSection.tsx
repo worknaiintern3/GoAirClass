@@ -317,7 +317,7 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     backgroundColor: '#FFF',
-    width: width * 0.85,
+    width: width > 600 ? 500 : width * 0.85,
     borderRadius: 24,
     padding: 20,
     shadowColor: '#000',
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   calendarDay: {
-    width: (width * 0.85 - 40) / 7,
+    width: (Math.min(width * 0.85, 500) - 40) / 7,
     height: 40,
     justifyContent: 'center',
     alignItems: 'center',
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   calendarDayEmpty: {
-    width: (width * 0.85 - 40) / 7,
+    width: (Math.min(width * 0.85, 500) - 40) / 7,
     height: 40,
   },
   modalFooter: {
