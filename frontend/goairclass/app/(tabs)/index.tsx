@@ -111,13 +111,13 @@ export default function HomeScreen() {
         {/* Quick Services Grid */}
         <View style={styles.quickServicesCard}>
           <View style={styles.quickServices}>
-            <TouchableOpacity style={styles.quickServiceItem} onPress={() => router.push('/services')}>
+            <TouchableOpacity style={styles.quickServiceItem} onPress={() => router.push('/(tabs)/services')}>
               <View style={[styles.quickIcon, { backgroundColor: '#E0F2FE' }]}>
                 <Ionicons name="bus" size={24} color={Colors.primary} />
               </View>
               <Text style={styles.quickLabel}>Buses</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.quickServiceItem} onPress={() => router.push('/services')}>
+            <TouchableOpacity style={styles.quickServiceItem} onPress={() => router.push('/(tabs)/services')}>
               <View style={[styles.quickIcon, { backgroundColor: '#FFF7ED' }]}>
                 <Ionicons name="airplane" size={24} color="#FF7A00" />
               </View>
@@ -220,7 +220,7 @@ export default function HomeScreen() {
             <Text style={styles.footerBrand}>GOAIR CLASS</Text>
             <Text style={styles.footerTagline}>Premium Travel Booking Ecosystem</Text>
             <View style={styles.footerLinks}>
-              <TouchableOpacity onPress={() => router.push('/services')}><Text style={styles.footerLink}>Services</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => router.push('/(tabs)/services')}><Text style={styles.footerLink}>Services</Text></TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/destinations')}><Text style={styles.footerLink}>Destinations</Text></TouchableOpacity>
               <TouchableOpacity onPress={() => router.push('/contact')}><Text style={styles.footerLink}>Contact</Text></TouchableOpacity>
               <TouchableOpacity><Text style={styles.footerLink}>Privacy Policy</Text></TouchableOpacity>

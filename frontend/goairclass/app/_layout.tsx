@@ -60,7 +60,6 @@ export default function RootLayout() {
         <Stack.Screen name="success" />
         <Stack.Screen name="admin-dashboard" />
         <Stack.Screen name="operator-panel" />
-        <Stack.Screen name="services" />
         <Stack.Screen name="destinations" />
         <Stack.Screen name="contact" />
         <Stack.Screen name="modal" options={{ presentation: 'modal', headerShown: true, title: 'Modal' }} />
