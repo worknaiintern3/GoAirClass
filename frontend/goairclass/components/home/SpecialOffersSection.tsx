@@ -35,7 +35,7 @@ export const SpecialOffersSection = ({ coupons }: { coupons: Coupon[] }) => {
             key={coupon._id} 
             style={[
               styles.card, 
-              { backgroundColor: index % 2 === 0 ? '#EEF2FF' : '#FFF7ED' }
+              { backgroundColor: index % 2 === 0 ? '#F1F5F9' : '#FFFBEB' }
             ]}
           >
             {coupon.image && (
@@ -47,7 +47,7 @@ export const SpecialOffersSection = ({ coupons }: { coupons: Coupon[] }) => {
             <View style={styles.cardContent}>
               <View style={[
                 styles.badge, 
-                { backgroundColor: index % 2 === 0 ? Colors.primary : '#FB923C' }
+                { backgroundColor: index % 2 === 0 ? Colors.primary : Colors.secondary }
               ]}>
                 <Text style={styles.badgeText}>{coupon.discountText}</Text>
               </View>
@@ -64,7 +64,7 @@ export const SpecialOffersSection = ({ coupons }: { coupons: Coupon[] }) => {
             <Ionicons 
               name={coupon.applicableOn === 'Flight' ? 'airplane' : 'bus'} 
               size={60} 
-              color={index % 2 === 0 ? 'rgba(0, 87, 255, 0.1)' : 'rgba(251, 146, 60, 0.1)'} 
+              color={index % 2 === 0 ? 'rgba(11, 34, 101, 0.1)' : 'rgba(193, 143, 18, 0.1)'} 
               style={styles.bgIcon}
             />
           </TouchableOpacity>
@@ -87,8 +87,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#0A0F1F',
   },
   viewAll: {
@@ -101,11 +101,11 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   card: {
-    width: 280,
-    height: 150,
-    borderRadius: 24,
-    marginRight: 15,
-    padding: 20,
+    width: 240,
+    height: 120,
+    borderRadius: 20,
+    marginRight: 12,
+    padding: 15,
     overflow: 'hidden',
     justifyContent: 'center',
   },
@@ -126,10 +126,10 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   offerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '900',
     color: '#1E293B',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   offerSubtitle: {
     fontSize: 13,

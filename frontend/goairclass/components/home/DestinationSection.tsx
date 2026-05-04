@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#0A0F1F',
   },
   subtitle: {
@@ -106,17 +106,17 @@ const styles = StyleSheet.create({
     paddingRight: 10,
   },
   card: {
-    width: width > 600 ? 280 : width * 0.45,
-    height: width > 600 ? 320 : 260,
-    marginRight: 15,
-    borderRadius: 24,
+    width: width > 600 ? 250 : width * 0.42,
+    height: width > 600 ? 300 : 220,
+    marginRight: 12,
+    borderRadius: 20,
     overflow: 'hidden',
     backgroundColor: '#F1F5F9',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 6,
+    shadowRadius: 12,
+    elevation: 5,
   },
   cardImage: {
     width: '100%',
@@ -136,8 +136,8 @@ const styles = StyleSheet.create({
   },
   destName: {
     color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 15,
+    fontWeight: '900',
     letterSpacing: 0.5,
   },
   metaRow: {

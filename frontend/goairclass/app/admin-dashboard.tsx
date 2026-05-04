@@ -1,215 +1,326 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Dimensions, Platform, TextInput, FlatList } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Dimensions, Platform, TextInput, Image, StatusBar } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router';
+import Animated, { FadeInDown, FadeInUp, FadeInLeft } from 'react-native-reanimated';
+import Constants from 'expo-constants';
+import { useAuth } from '@/context/AuthContext';
 
 const { width } = Dimensions.get('window');
-const isWeb = Platform.OS === 'web';
-
-type AdminTab = 'Dashboard' | 'Users' | 'Operators' | 'Bus Requests' | 'Bookings';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState<AdminTab>('Dashboard');
-  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState('Overview');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/login');
+  };
 
   const stats = [
-    { label: 'Total Users', value: '12,540', icon: 'people', color: '#6366F1' },
-    { label: 'Operators', value: '850', icon: 'bus', color: '#10B981' },
-    { label: 'Active Buses', value: '4,200', icon: 'car-sport', color: '#F59E0B' },
-    { label: 'Revenue', value: '₹45.2L', icon: 'wallet', color: '#EC4899' },
+    { label: 'FLIGHT BOOKINGS', value: '1,284', trend: '+14%', icon: 'airplane', color: Colors.primary },
+    { label: 'HOTEL STAYS', value: '842', trend: '+8%', icon: 'business', color: '#6366F1' },
+    { label: 'BUS TICKETS', value: '2,450', trend: '-3%', icon: 'bus', color: Colors.secondary },
+    { label: 'TRAIN TRAVELS', value: '3,120', trend: '+22%', icon: 'train', color: Colors.success },
   ];
 
-  const renderDashboard = () => (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.statsGrid}>
-        {stats.map((stat, index) => (
-          <View key={index} style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: stat.color + '15' }]}>
-              <Ionicons name={stat.icon as any} size={24} color={stat.color} />
-            </View>
-            <View>
-              <Text style={styles.statLabel}>{stat.label}</Text>
-              <Text style={styles.statValue}>{stat.value}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-      <View style={isWeb ? styles.row : styles.column}>
-        <View style={[styles.sectionCard, isWeb && { flex: 2 }]}>
-          <Text style={styles.sectionTitle}>Booking Trends (Monthly)</Text>
-          <View style={styles.chartPlaceholder}>
-            <Text style={styles.placeholderText}>[ Monthly Sales Chart Area ]</Text>
-          </View>
-        </View>
-        <View style={[styles.sectionCard, isWeb && { flex: 1, marginLeft: 20 }]}>
-          <Text style={styles.sectionTitle}>Recent Bus Requests</Text>
-          {[1, 2, 3].map((_, i) => (
-            <View key={i} style={styles.listItem}>
-              <View style={styles.listInfo}>
-                <Text style={styles.listTitle}>Volvo B11R Luxury</Text>
-                <Text style={styles.listSubtitle}>By: Travel Express</Text>
-              </View>
-              <TouchableOpacity onPress={() => setActiveTab('Bus Requests')}>
-                <Text style={styles.actionText}>View</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
-      </View>
-    </ScrollView>
-  );
+  const managementMenu = [
+    { label: 'Overview', icon: 'grid', color: Colors.primary, active: true },
+    { label: 'Users', icon: 'people', color: '#6366F1' },
+    { label: 'Flights', icon: 'airplane', color: '#EF4444' },
+    { label: 'Hotels', icon: 'business', color: '#8B5CF6' },
+    { label: 'Buses', icon: 'bus', color: Colors.secondary },
+    { label: 'Trains', icon: 'train', color: Colors.success },
+    { label: 'Analytics', icon: 'bar-chart', color: '#06B6D4' },
+    { label: 'Settings', icon: 'settings', color: '#64748B' },
+  ];
 
-  const renderUsers = () => (
-    <View style={styles.sectionContainer}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>User Management</Text>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={18} color="#94A3B8" />
-          <TextInput placeholder="Search users..." style={styles.searchInput} />
-        </View>
-      </View>
-
-      <View style={styles.listContainer}>
-        {['Rahul Sharma', 'Priya Patel', 'Amit Singh'].map((user, i) => (
-          <View key={i} style={styles.userRow}>
-            <View style={styles.userInfo}>
-              <View style={styles.avatarSmall} />
-              <View>
-                <Text style={styles.listTitle}>{user}</Text>
-                <Text style={styles.listSubtitle}>+91 98765 43210</Text>
-              </View>
-            </View>
-            <View style={styles.rowActions}>
-              <TouchableOpacity style={styles.iconBtn}><Ionicons name="create-outline" size={20} color={Colors.primary} /></TouchableOpacity>
-              <TouchableOpacity style={styles.iconBtn}><Ionicons name="ban-outline" size={20} color="#EF4444" /></TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-
-  const renderOperators = () => (
-    <View style={styles.sectionContainer}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Bus Operators</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => setShowInviteModal(true)}>
-          <Ionicons name="add" size={20} color="#FFF" />
-          <Text style={styles.addBtnText}>Invite Operator</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={styles.listContainer}>
-        {['City Link Travels', 'Purple Bus', 'National Express'].map((op, i) => (
-          <View key={i} style={styles.userRow}>
-            <View style={styles.userInfo}>
-              <View style={[styles.avatarSmall, { backgroundColor: '#F1F5F9' }]}>
-                <Ionicons name="bus" size={16} color={Colors.primary} />
-              </View>
-              <View>
-                <Text style={styles.listTitle}>{op}</Text>
-                <Text style={styles.listSubtitle}>12 Active Buses</Text>
-              </View>
-            </View>
-            <View style={styles.rowActions}>
-              <TouchableOpacity style={styles.iconBtn}><Ionicons name="create-outline" size={20} color={Colors.primary} /></TouchableOpacity>
-              <TouchableOpacity style={styles.iconBtn}><Ionicons name="pause-circle-outline" size={20} color="#F59E0B" /></TouchableOpacity>
-              <TouchableOpacity style={styles.iconBtn}><Ionicons name="trash-outline" size={20} color="#EF4444" /></TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
+  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
   return (
     <View style={styles.container}>
-      {/* Sidebar */}
-      <View style={styles.sidebar}>
-        <View style={styles.sidebarBrand}>
-          <Text style={styles.brandText}>GOAIR CLASS</Text>
-          <Text style={styles.roleText}>ADMIN PANEL</Text>
-        </View>
-        <View style={styles.sidebarMenu}>
-          {[
-            { id: 'Dashboard', icon: 'grid' },
-            { id: 'Users', icon: 'people' },
-            { id: 'Operators', icon: 'bus' },
-            { id: 'Bus Requests', icon: 'time' },
-            { id: 'Bookings', icon: 'receipt' },
-          ].map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              onPress={() => setActiveTab(item.id as AdminTab)}
-              style={[styles.menuItem, activeTab === item.id && styles.activeMenuItem]}
-            >
-              <Ionicons name={item.icon + (activeTab === item.id ? '' : '-outline') as any} size={20} color={activeTab === item.id ? '#FFF' : '#94A3B8'} />
-              <Text style={[styles.menuText, activeTab === item.id && styles.activeMenuText]}>{item.id}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
+      <StatusBar barStyle="dark-content" />
 
-      {/* Main Content */}
-      <View style={styles.mainContent}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>{activeTab}</Text>
-          <View style={styles.headerActions}>
-            <TouchableOpacity style={styles.notifBtn}>
-              <Ionicons name="notifications-outline" size={20} color="#64748B" />
-              <View style={styles.badge} />
-            </TouchableOpacity>
-            <View style={styles.adminProfile}>
-              <View style={styles.avatar} />
-              <Text style={styles.adminName}>Admin User</Text>
-            </View>
-          </View>
-        </View>
-
-        {activeTab === 'Dashboard' && renderDashboard()}
-        {activeTab === 'Users' && renderUsers()}
-        {activeTab === 'Operators' && renderOperators()}
-        {activeTab === 'Bus Requests' && (
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Pending Bus Approvals</Text>
-            {['Luxury Sleeper - OP #12', 'AC Seater - OP #45'].map((bus, i) => (
-              <View key={i} style={styles.requestCard}>
-                <View style={styles.listInfo}>
-                  <Text style={styles.listTitle}>{bus}</Text>
-                  <Text style={styles.listSubtitle}>Route: Pune to Mumbai</Text>
-                </View>
-                <View style={styles.rowActions}>
-                  <TouchableOpacity style={styles.approveBtn}><Text style={styles.approveBtnText}>Approve</Text></TouchableOpacity>
-                  <TouchableOpacity style={styles.rejectBtn}><Text style={styles.rejectBtnText}>Reject</Text></TouchableOpacity>
-                </View>
+      {/* Side Navigation Drawer Overlay */}
+      {isDrawerOpen && (
+        <TouchableOpacity 
+          activeOpacity={1} 
+          onPress={toggleDrawer} 
+          style={styles.drawerOverlay}
+        >
+          <Animated.View 
+            entering={FadeInLeft.duration(300)} 
+            style={styles.drawerContent}
+          >
+            <View style={styles.drawerHeader}>
+              <View style={styles.logoBadge}>
+                <Text style={styles.logoLetter}>A</Text>
               </View>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Invite Modal Overlay (Simple Simulation) */}
-      {showInviteModal && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Invite New Operator</Text>
-              <TouchableOpacity onPress={() => setShowInviteModal(false)}><Ionicons name="close" size={24} color="#64748B" /></TouchableOpacity>
-            </View>
-            <View style={styles.modalBody}>
-              <Text style={styles.inputLabel}>Full Name</Text>
-              <TextInput style={styles.modalInput} placeholder="Enter operator name" />
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <TextInput style={styles.modalInput} placeholder="operator@example.com" />
-              <Text style={styles.inputLabel}>Mobile Number</Text>
-              <TextInput style={styles.modalInput} placeholder="+91 00000 00000" />
-              <TouchableOpacity style={styles.submitBtn}>
-                <Text style={styles.submitBtnText}>Send Invitation Email</Text>
+              <Text style={styles.headerBrand}>AdminPanel</Text>
+              <TouchableOpacity onPress={toggleDrawer} style={styles.closeBtn}>
+                <Ionicons name="close" size={24} color="#64748B" />
               </TouchableOpacity>
             </View>
+
+            <View style={styles.drawerMenu}>
+              <Text style={styles.menuGroupTitle}>OPERATIONS</Text>
+              {managementMenu.map((item, index) => (
+                <TouchableOpacity 
+                  key={index} 
+                  style={[styles.drawerMenuItem, item.active && styles.activeDrawerItem]}
+                  onPress={toggleDrawer}
+                >
+                  <Ionicons 
+                    name={item.icon as any} 
+                    size={22} 
+                    color={item.active ? '#FFF' : '#64748B'} 
+                  />
+                  <Text style={[styles.drawerMenuLabel, item.active && styles.activeDrawerLabel]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+
+              <View style={styles.drawerDivider} />
+              
+              <TouchableOpacity style={styles.drawerLogoutBtn} onPress={handleLogout}>
+                <Ionicons name="log-out-outline" size={22} color="#EF4444" />
+                <Text style={styles.drawerLogoutText}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
+      )}
+      
+      {/* Top Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={toggleDrawer} style={styles.menuToggleBtn}>
+            <Ionicons name="menu-outline" size={28} color="#1E293B" />
+          </TouchableOpacity>
+          <View style={styles.logoBadgeSmall}>
+            <Text style={styles.logoLetterSmall}>A</Text>
+          </View>
+          <Text style={styles.headerBrand}>AdminPanel</Text>
+        </View>
+        
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.notifBtn}>
+            <Ionicons name="notifications-outline" size={22} color="#64748B" />
+            <View style={styles.activeDot} />
+          </TouchableOpacity>
+          <View style={styles.profileBox}>
+            <View style={styles.profileText}>
+              <Text style={styles.profileName}>prasad</Text>
+              <Text style={styles.profileRole}>OPERATIONS ADMIN</Text>
+            </View>
+            <View style={styles.avatar}>
+              <Ionicons name="person" size={20} color="#FFF" />
+            </View>
           </View>
         </View>
+      </View>
+
+      {activeTab === 'Overview' ? (
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        {/* Search Bar */}
+        <Animated.View entering={FadeInUp.delay(100)} style={styles.searchSection}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={20} color="#94A3B8" />
+            <TextInput 
+              placeholder="Search bookings, users..." 
+              style={styles.searchInput}
+              value={search}
+              onChangeText={setSearch}
+            />
+          </View>
+        </Animated.View>
+
+        {/* Quick Actions */}
+        {/* Quick Actions */}
+        <Animated.View entering={FadeInUp.delay(150)} style={styles.quickActions}>
+          <Text style={styles.sectionTitleSmall}>QUICK ACTIONS</Text>
+          <View style={styles.actionsRow}>
+            <TouchableOpacity style={styles.actionCard}>
+              <View style={[styles.actionIcon, { backgroundColor: Colors.primary }]}>
+                <Ionicons name="airplane" size={18} color="#FFF" />
+              </View>
+              <Text style={styles.actionLabel}>Add Flight</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard}>
+              <View style={[styles.actionIcon, { backgroundColor: Colors.success }]}>
+                <Ionicons name="person-add" size={18} color="#FFF" />
+              </View>
+              <Text style={styles.actionLabel}>New User</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard}>
+              <View style={[styles.actionIcon, { backgroundColor: Colors.secondary }]}>
+                <Ionicons name="megaphone" size={18} color="#FFF" />
+              </View>
+              <Text style={styles.actionLabel}>Send Alert</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionCard}>
+              <View style={[styles.actionIcon, { backgroundColor: Colors.accent }]}>
+                <Ionicons name="document-text" size={18} color="#FFF" />
+              </View>
+              <Text style={styles.actionLabel}>Report</Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
+
+        {/* Dashboard Title Section */}
+        <View style={styles.titleSection}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.mainTitle}>Operations Dashboard</Text>
+            <Text style={styles.subTitle}>Monitoring GoAirClass service performance.</Text>
+          </View>
+          <TouchableOpacity style={styles.reportBtn}>
+            <Text style={styles.reportBtnText}>Download Report</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          {stats.map((stat, index) => (
+            <Animated.View 
+              key={index} 
+              entering={FadeInDown.delay(200 + index * 100)} 
+              style={styles.statCard}
+            >
+              <View style={styles.statHeader}>
+                <View style={[styles.statIconBox, { backgroundColor: stat.color + '15' }]}>
+                  <Ionicons name={stat.icon as any} size={18} color={stat.color} />
+                </View>
+                <Text style={[styles.trendText, { color: stat.trend.startsWith('+') ? '#10B981' : '#EF4444' }]}>
+                  <Ionicons name={stat.trend.startsWith('+') ? 'trending-up' : 'trending-down'} size={12} /> {stat.trend}
+                </Text>
+              </View>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={styles.statValue}>{stat.value}</Text>
+            </Animated.View>
+          ))}
+        </View>
+
+        {/* Charts & Goals Section */}
+        <View style={styles.analyticsRow}>
+          <Animated.View entering={FadeInLeft.delay(600)} style={styles.chartCard}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Service Popularity</Text>
+              <View style={styles.legend}>
+                <View style={[styles.dot, { backgroundColor: '#3B82F6' }]} />
+                <Text style={styles.legendText}>FLIGHTS</Text>
+                <View style={[styles.dot, { backgroundColor: '#6366F1', marginLeft: 10 }]} />
+                <Text style={styles.legendText}>HOTELS</Text>
+              </View>
+            </View>
+            <View style={styles.chartPlaceholder}>
+              <View style={styles.chartLineContainer}>
+                 {[40, 60, 45, 90, 65, 75, 55].map((h, i) => (
+                   <View key={i} style={[styles.chartBar, { height: h }]} />
+                 ))}
+              </View>
+              <View style={styles.chartLabels}>
+                {['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
+                  <Text key={i} style={styles.chartLabelText}>{d}</Text>
+                ))}
+              </View>
+            </View>
+          </Animated.View>
+
+          <Animated.View entering={FadeInLeft.delay(800)} style={styles.goalsCard}>
+             <Text style={styles.cardTitleCenter}>REVENUE GOALS</Text>
+             <View style={styles.progressContainer}>
+                <View style={styles.progressCircle}>
+                  <Text style={styles.progressValue}>82%</Text>
+                  <Text style={styles.progressLabel}>ACHIEVED</Text>
+                </View>
+             </View>
+             <View style={styles.goalStats}>
+                <View style={styles.goalItem}>
+                  <Text style={styles.goalLabel}>WEEKLY TARGET</Text>
+                  <Text style={styles.goalValue}>₹12.5L / ₹15L</Text>
+                </View>
+                <View style={styles.goalItem}>
+                  <Text style={styles.goalLabel}>MONTHLY GROWTH</Text>
+                  <Text style={[styles.goalValue, { color: '#10B981' }]}>+12.4%</Text>
+                </View>
+             </View>
+          </Animated.View>
+        </View>
+
+        {/* Recent Activity */}
+        <Animated.View entering={FadeInDown.delay(1000)} style={styles.recentActivity}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            <TouchableOpacity><Text style={styles.linkText}>View All</Text></TouchableOpacity>
+          </View>
+          {[
+            { user: 'Rahul Sharma', action: 'Booked Flight to Mumbai', time: '10 mins ago', icon: 'airplane', color: Colors.primary },
+            { user: 'Sonia Verma', action: 'New User Registration', time: '25 mins ago', icon: 'person-add', color: Colors.success },
+            { user: 'Bus #4521', action: 'Maintenance Completed', time: '1 hour ago', icon: 'construct', color: Colors.secondary },
+          ].map((activity, i) => (
+            <View key={i} style={styles.activityItem}>
+              <View style={[styles.activityIconBox, { backgroundColor: activity.color + '15' }]}>
+                <Ionicons name={activity.icon as any} size={18} color={activity.color} />
+              </View>
+              <View style={styles.activityInfo}>
+                <Text style={styles.activityUser}>{activity.user}</Text>
+                <Text style={styles.activityAction}>{activity.action}</Text>
+              </View>
+              <Text style={styles.activityTime}>{activity.time}</Text>
+            </View>
+          ))}
+        </Animated.View>
+
+        {/* Management Grid removed as it is now in the sidebar */}
+      </ScrollView>
+      ) : (
+        <View style={styles.placeholderContainer}>
+          <Ionicons name="construct-outline" size={64} color="#CBD5E1" />
+          <Text style={styles.placeholderTitle}>{activeTab} Management</Text>
+          <Text style={styles.placeholderSubtitle}>This section is currently under development.</Text>
+        </View>
       )}
+
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setActiveTab('Overview')}
+        >
+          <Ionicons name="home" size={22} color={activeTab === 'Overview' ? Colors.primary : '#64748B'} />
+          <Text style={[styles.navLabel, activeTab === 'Overview' && { color: Colors.primary }]}>Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setActiveTab('Flights')}
+        >
+          <Ionicons name={activeTab === 'Flights' ? "airplane" : "airplane-outline"} size={22} color={activeTab === 'Flights' ? Colors.primary : '#64748B'} />
+          <Text style={[styles.navLabel, activeTab === 'Flights' && { color: Colors.primary }]}>Flight</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setActiveTab('Buses')}
+        >
+          <Ionicons name={activeTab === 'Buses' ? "bus" : "bus-outline"} size={22} color={activeTab === 'Buses' ? Colors.primary : '#64748B'} />
+          <Text style={[styles.navLabel, activeTab === 'Buses' && { color: Colors.primary }]}>Buses</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.navItem} 
+          onPress={() => setActiveTab('Profile')}
+        >
+          <Ionicons name={activeTab === 'Profile' ? "person" : "person-outline"} size={22} color={activeTab === 'Profile' ? Colors.primary : '#64748B'} />
+          <Text style={[styles.navLabel, activeTab === 'Profile' && { color: Colors.primary }]}>Profile</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -217,55 +328,8 @@ export default function AdminDashboard() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
-    flexDirection: 'row',
-  },
-  sidebar: {
-    width: 260,
-    backgroundColor: '#0A0F1F',
-    padding: 20,
-    display: isWeb ? 'flex' : 'none',
-  },
-  sidebarBrand: {
-    marginBottom: 40,
-    paddingHorizontal: 10,
-  },
-  brandText: {
-    color: '#FFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-    letterSpacing: 1,
-  },
-  roleText: {
-    color: Colors.secondary,
-    fontSize: 10,
-    fontWeight: 'bold',
-    marginTop: 4,
-    letterSpacing: 2,
-  },
-  sidebarMenu: {
-    gap: 10,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
-    gap: 12,
-  },
-  activeMenuItem: {
-    backgroundColor: Colors.primary,
-  },
-  menuText: {
-    color: '#94A3B8',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  activeMenuText: {
-    color: '#FFF',
-  },
-  mainContent: {
-    flex: 1,
+    backgroundColor: '#F8FAFC',
+    paddingTop: Constants.statusBarHeight,
   },
   header: {
     height: 70,
@@ -273,30 +337,152 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 25,
+    paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
+    borderBottomColor: '#F1F5F9',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1E293B',
-  },
-  headerActions: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
+    gap: 8,
+    flexShrink: 1,
+  },
+  menuToggleBtn: {
+    width: 35,
+    height: 35,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoLetter: {
+    color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  logoBadgeSmall: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: Colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoLetterSmall: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  headerBrand: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1E293B',
+    letterSpacing: -0.5,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  drawerOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    zIndex: 1000,
+  },
+  drawerContent: {
+    width: width * 0.75,
+    height: '100%',
+    backgroundColor: '#FFF',
+    paddingTop: Constants.statusBarHeight + 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 4, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 15,
+    elevation: 20,
+  },
+  drawerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 30,
+    gap: 12,
+  },
+  closeBtn: {
+    marginLeft: 'auto',
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  drawerMenu: {
+    paddingHorizontal: 15,
+  },
+  menuGroupTitle: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 1.5,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+  },
+  drawerMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    gap: 12,
+    marginBottom: 4,
+  },
+  activeDrawerItem: {
+    backgroundColor: Colors.primary,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  drawerMenuLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  activeDrawerLabel: {
+    color: '#FFF',
+  },
+  drawerDivider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 20,
+    marginHorizontal: 10,
+  },
+  drawerLogoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  drawerLogoutText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#EF4444',
   },
   notifBtn: {
     width: 40,
     height: 40,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
-  badge: {
+  activeDot: {
     position: 'absolute',
     top: 10,
     right: 10,
@@ -304,258 +490,456 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#EF4444',
+    borderWidth: 2,
+    borderColor: '#FFF',
   },
-  adminProfile: {
+  profileBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 10,
   },
-  avatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#CBD5E1',
+  profileText: {
+    alignItems: 'flex-end',
   },
-  adminName: {
+  profileName: {
     fontSize: 14,
     fontWeight: 'bold',
     color: '#1E293B',
   },
-  scrollContent: {
-    padding: 25,
+  profileRole: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: Colors.primary,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
-    marginBottom: 25,
-  },
-  statCard: {
-    flex: 1,
-    minWidth: 200,
-    backgroundColor: '#FFF',
-    padding: 20,
-    borderRadius: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  statIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
   },
-  statValue: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1E293B',
-    marginTop: 2,
-  },
-  sectionContainer: {
-    padding: 25,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1E293B',
+  searchSection: {
+    marginBottom: 25,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
+    borderRadius: 15,
     paddingHorizontal: 15,
-    borderRadius: 12,
-    height: 45,
-    width: 300,
+    height: 50,
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
-    fontSize: 14,
+    fontSize: 15,
+    color: '#1E293B',
   },
-  listContainer: {
-    backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-  },
-  userRow: {
+  titleSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    marginBottom: 20,
+    gap: 10,
   },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 15,
-  },
-  avatarSmall: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E2E8F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  listTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
+  mainTitle: {
+    flex: 1,
+    fontSize: 20,
+    fontWeight: '900',
     color: '#1E293B',
   },
-  listSubtitle: {
+  subTitle: {
+    flex: 1,
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
   },
-  rowActions: {
-    flexDirection: 'row',
-    gap: 10,
+  reportBtn: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 10,
   },
-  iconBtn: {
+  reportBtnText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 25,
+  },
+  statCard: {
+    width: (width - 52) / 2,
+    backgroundColor: '#FFF',
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.05,
+    shadowRadius: 15,
+    elevation: 3,
+  },
+  statHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  statIconBox: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  addBtn: {
-    backgroundColor: Colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    gap: 8,
-  },
-  addBtnText: {
-    color: '#FFF',
-    fontSize: 14,
+  trendText: {
+    fontSize: 10,
     fontWeight: 'bold',
   },
-  requestCard: {
+  statLabel: {
+    fontSize: 10,
+    color: '#64748B',
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#1E293B',
+    marginTop: 4,
+  },
+  analyticsRow: {
+    gap: 20,
+    marginBottom: 30,
+  },
+  chartCard: {
     backgroundColor: '#FFF',
     padding: 20,
-    borderRadius: 16,
-    marginBottom: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  approveBtn: {
-    backgroundColor: '#ECFDF5',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  approveBtnText: {
-    color: '#059669',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  rejectBtn: {
-    backgroundColor: '#FEF2F2',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 10,
-  },
-  rejectBtnText: {
-    color: '#DC2626',
-    fontWeight: 'bold',
-    fontSize: 13,
-  },
-  modalOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  modalContent: {
-    width: 450,
-    backgroundColor: '#FFF',
     borderRadius: 24,
-    padding: 30,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
-  modalHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 25,
+    marginBottom: 20,
   },
-  modalTitle: {
-    fontSize: 20,
+  cardTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#1E293B',
   },
-  modalBody: {
-    gap: 15,
-  },
-  inputLabel: {
+  cardTitleCenter: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '900',
+    color: '#1E293B',
+    textAlign: 'center',
+    marginBottom: 20,
+    letterSpacing: 1,
+  },
+  legend: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  legendText: {
+    fontSize: 9,
+    fontWeight: 'bold',
     color: '#64748B',
-    marginBottom: 5,
+    marginLeft: 4,
   },
-  modalInput: {
-    backgroundColor: '#F8FAFC',
+  chartPlaceholder: {
+    height: 150,
+    justifyContent: 'flex-end',
+  },
+  chartLineContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 100,
+    paddingHorizontal: 10,
+  },
+  chartBar: {
+    width: 12,
+    backgroundColor: Colors.primary + '20',
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  chartLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+    paddingHorizontal: 5,
+  },
+  chartLabelText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  goalsCard: {
+    backgroundColor: '#FFF',
+    padding: 20,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    height: 50,
-    paddingHorizontal: 15,
-    fontSize: 15,
+    borderColor: '#F1F5F9',
+    alignItems: 'center',
   },
-  submitBtn: {
-    backgroundColor: Colors.primary,
-    height: 55,
-    borderRadius: 16,
+  progressContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 10,
+    borderColor: '#F1F5F9',
+    borderTopColor: Colors.primary,
+    borderRightColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 15,
+    marginBottom: 20,
   },
-  submitBtnText: {
-    color: '#FFF',
+  progressCircle: {
+    alignItems: 'center',
+  },
+  progressValue: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#1E293B',
+  },
+  progressLabel: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#94A3B8',
+  },
+  goalStats: {
+    width: '100%',
+    gap: 15,
+  },
+  goalItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  goalLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#94A3B8',
+  },
+  goalValue: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#1E293B',
+  },
+  sectionTitle: {
     fontSize: 16,
     fontWeight: 'bold',
+    color: '#1E293B',
+    marginBottom: 15,
+    marginLeft: 5,
   },
-  row: { flexDirection: 'row' },
-  column: { flexDirection: 'column' },
-  sectionCard: { backgroundColor: '#FFF', padding: 20, borderRadius: 20 },
-  chartPlaceholder: { height: 200, backgroundColor: '#F8FAFC', borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  placeholderText: { color: '#94A3B8' },
-  listItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
-  listInfo: { flex: 1 },
-  actionText: { color: Colors.primary, fontWeight: 'bold' },
+  menuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 30,
+  },
+  menuItem: {
+    width: (width - 52) / 2,
+    backgroundColor: '#FFF',
+    padding: 15,
+    borderRadius: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  menuIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  activeMenuIcon: {
+    backgroundColor: '#3B82F6',
+  },
+  menuLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  activeMenuLabel: {
+    color: '#1E293B',
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    padding: 15,
+    backgroundColor: '#FEF2F2',
+    borderRadius: 15,
+    marginBottom: 20,
+  },
+  logoutText: {
+    color: '#EF4444',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  quickActions: {
+    marginBottom: 30,
+  },
+  sectionTitleSmall: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 1.5,
+    marginBottom: 15,
+    marginLeft: 5,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+  },
+  actionCard: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  actionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  actionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  recentActivity: {
+    backgroundColor: '#FFF',
+    padding: 20,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    marginBottom: 20,
+  },
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  activityIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  activityInfo: {
+    flex: 1,
+  },
+  activityUser: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#1E293B',
+  },
+  activityAction: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  activityTime: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  linkText: {
+    fontSize: 14,
+    color: Colors.primary,
+    fontWeight: 'bold',
+  },
+  bottomNav: {
+    height: 70,
+    backgroundColor: '#FFF',
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+    paddingBottom: Platform.OS === 'ios' ? 15 : 0,
+  },
+  navItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  navLabel: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#64748B',
+    marginTop: 4,
+  },
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: '#F8FAFC',
+  },
+  placeholderTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#1E293B',
+    marginTop: 20,
+    textAlign: 'center',
+  },
+  placeholderSubtitle: {
+    fontSize: 14,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 10,
+    lineHeight: 20,
+  },
 });

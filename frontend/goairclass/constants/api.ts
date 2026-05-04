@@ -1,24 +1,15 @@
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// For physical devices, we need the computer's IP address.
-// Expo Constants provides this via hostUri.
-const getDebuggerHost = () => {
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (!hostUri) return '127.0.0.1';
-  return hostUri.split(':')[0];
-};
+// For physical devices, since you are on --tunnel, we use localtunnel to expose your backend to the internet.
 
-const debuggerHost = getDebuggerHost();
+const TUNNEL_URL = 'https://implemented-strict-teens-controller.trycloudflare.com'; 
+console.log('API Base URL:', TUNNEL_URL);
 
-const DEV_BASE_URL = Platform.OS === 'android' && !debuggerHost.startsWith('10.0.2.2') 
-  ? `http://${debuggerHost}:5000/api` 
-  : Platform.OS === 'android' 
-    ? 'http://10.0.2.2:5000/api' 
-    : `http://${debuggerHost}:5000/api`;
+const DEV_BASE_URL = `${TUNNEL_URL}/api`;
 
 // Safety override for web or if detection fails
-const FINAL_BASE_URL = debuggerHost === '127.0.0.1' ? 'http://127.0.0.1:5000/api' : DEV_BASE_URL;
+const FINAL_BASE_URL = DEV_BASE_URL;
 
 export const API_BASE_URL = FINAL_BASE_URL;
 
@@ -29,16 +20,19 @@ export const ENDPOINTS = {
   PUBLIC_DESTINATIONS: `${API_BASE_URL}/destinations/public`,
   VIDEO_CONTENT: `${API_BASE_URL}/content/video`,
   TESTIMONIALS: `${API_BASE_URL}/testimonials/public`,
+  FLIGHT_SEARCH: `${API_BASE_URL}/flights/search`,
+  FLIGHT_SEARCH_BUDGET: `${API_BASE_URL}/flights/search-with-budget`,
+  FLIGHT_AIRLINES: `${API_BASE_URL}/flights/airlines`,
 };
 
-export const getImageUrl = (path: string) => {
+export const getImageUrl = (path: string | null | undefined) => {
   if (!path) return null;
   if (path.startsWith('http')) {
     // If it's a full URL, ensure it uses the correct host for the current device
     const needsHostFix = path.includes('localhost') || path.includes('127.0.0.1');
     if (needsHostFix) {
-      const targetHost = (Platform.OS === 'android' && debuggerHost === '127.0.0.1') ? '10.0.2.2' : debuggerHost;
-      return path.replace('localhost', targetHost).replace('127.0.0.1', targetHost);
+      const targetHost = TUNNEL_URL.replace('https://', '');
+      return path.replace('http://localhost:5000', TUNNEL_URL).replace('http://127.0.0.1:5000', TUNNEL_URL);
     }
     return path;
   }

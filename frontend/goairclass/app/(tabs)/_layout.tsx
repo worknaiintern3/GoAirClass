@@ -4,11 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+import { useAuth } from '@/context/AuthContext';
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
   const theme = Colors[colorScheme ?? 'light'];
-
-  const isLoggedIn = false;
+  const { isLoggedIn } = useAuth();
 
   return (
     <Tabs

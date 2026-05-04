@@ -1,127 +1,139 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Dimensions, FlatList } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Dimensions, Platform, TextInput, Image, StatusBar } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeInUp, FadeInLeft } from 'react-native-reanimated';
+import Constants from 'expo-constants';
+import { router } from 'expo-router';
+import { useAuth } from '@/context/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export default function SuperAdminDashboard() {
   const [activeTab, setActiveTab] = useState('Overview');
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/login');
+  };
 
   const stats = [
-    { label: 'Total Revenue', value: '₹1.2Cr', icon: 'cash', color: '#10B981' },
-    { label: 'Total Users', value: '45.2k', icon: 'people', color: '#6366F1' },
-    { label: 'Active Operators', value: '124', icon: 'bus', color: '#F59E0B' },
-    { label: 'Pending Requests', value: '18', icon: 'time', color: '#EF4444' },
+    { label: 'TOTAL REVENUE', value: '₹1.24 Cr', trend: '+18.5%', icon: 'cash', color: '#10B981' },
+    { label: 'GLOBAL USERS', value: '45,210', trend: '+12%', icon: 'people', color: '#6366F1' },
+    { label: 'ACTIVE OPERATORS', value: '184', trend: '+5%', icon: 'bus', color: '#F59E0B' },
+    { label: 'SYSTEM HEALTH', value: '99.9%', trend: 'Stable', icon: 'pulse', color: '#EF4444' },
   ];
 
   const adminRequests = [
-    { id: '1', name: 'Amit Kumar', email: 'amit@example.com', date: '20 Apr', status: 'Pending' },
-    { id: '2', name: 'Sonia Verma', email: 'sonia@example.com', date: '19 Apr', status: 'Pending' },
+    { id: '1', name: 'Amit Kumar', email: 'amit@example.com', date: '20 Apr', type: 'Admin Access' },
+    { id: '2', name: 'Sonia Verma', email: 'sonia@example.com', date: '19 Apr', type: 'Operator Panel' },
   ];
-
-  const renderOverview = () => (
-    <View style={styles.section}>
-      <View style={styles.statsGrid}>
-        {stats.map((stat, i) => (
-          <View key={i} style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: stat.color + '15' }]}>
-              <Ionicons name={stat.icon as any} size={24} color={stat.color} />
-            </View>
-            <Text style={styles.statValue}>{stat.value}</Text>
-            <Text style={styles.statLabel}>{stat.label}</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.requestSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Admin Requests</Text>
-          <TouchableOpacity><Text style={styles.viewAllText}>View All</Text></TouchableOpacity>
-        </View>
-        {adminRequests.map((req) => (
-          <View key={req.id} style={styles.requestCard}>
-            <View style={styles.requestInfo}>
-              <Text style={styles.requestName}>{req.name}</Text>
-              <Text style={styles.requestEmail}>{req.email}</Text>
-            </View>
-            <View style={styles.actionRow}>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: Colors.success }]}>
-                <Ionicons name="checkmark" size={18} color="#FFF" />
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#EF4444' }]}>
-                <Ionicons name="close" size={18} color="#FFF" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
-      </View>
-    </View>
-  );
-
-  const renderUserDirectory = () => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>User Directory Management</Text>
-      <View style={styles.menuGrid}>
-        {[
-          { label: 'Add Admin', icon: 'person-add', color: Colors.primary },
-          { label: 'Admin List', icon: 'list', color: '#6366F1' },
-          { label: 'Operator List', icon: 'bus', color: '#F59E0B' },
-          { label: 'User List', icon: 'people', color: '#10B981' },
-        ].map((item, i) => (
-          <TouchableOpacity key={i} style={styles.menuItem}>
-            <Ionicons name={item.icon as any} size={28} color={item.color} />
-            <Text style={styles.menuLabel}>{item.label}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#0A0F1F', '#1E293B']} style={styles.header}>
-        <View style={styles.headerTop}>
-          <View>
-            <Text style={styles.superTitle}>Super Admin</Text>
-            <Text style={styles.superSubtitle}>Full System Access</Text>
+      <StatusBar barStyle="dark-content" />
+      
+      {/* Top Header */}
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <View style={[styles.logoBadge, { backgroundColor: '#1E293B' }]}>
+            <Text style={styles.logoLetter}>S</Text>
           </View>
-          <TouchableOpacity style={styles.profileBtn}>
-            <Ionicons name="notifications" size={24} color="#FFF" />
-            <View style={styles.notifBadge} />
-          </TouchableOpacity>
+          <Text style={styles.headerBrand}>SuperControl</Text>
         </View>
-
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll}>
-          {['Overview', 'User Directory', 'Booking Control', 'Marketing'].map((tab) => (
-            <TouchableOpacity 
-              key={tab} 
-              onPress={() => setActiveTab(tab)}
-              style={[styles.tab, activeTab === tab && styles.activeTab]}
-            >
-              <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </LinearGradient>
-
-      <ScrollView contentContainerStyle={styles.content}>
-        {activeTab === 'Overview' && renderOverview()}
-        {activeTab === 'User Directory' && renderUserDirectory()}
-        {/* Placeholder for other tabs */}
-        {activeTab === 'Booking Control' && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Fraud Alerts & Refunds</Text>
-            <View style={styles.alertCard}>
-              <Ionicons name="warning" size={24} color="#EF4444" />
-              <View style={styles.alertInfo}>
-                <Text style={styles.alertTitle}>Suspicious Activity Detected</Text>
-                <Text style={styles.alertDesc}>Operator #124 has high cancellation rates.</Text>
-              </View>
+        
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.notifBtn}>
+            <Ionicons name="shield-checkmark" size={20} color="#10B981" />
+          </TouchableOpacity>
+          <View style={styles.profileBox}>
+            <View style={styles.avatar}>
+              <Ionicons name="key" size={18} color="#FFF" />
             </View>
           </View>
-        )}
+        </View>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        
+        {/* Welcome Section */}
+        <Animated.View entering={FadeInUp} style={styles.welcomeSection}>
+          <Text style={styles.mainTitle}>System Overview</Text>
+          <Text style={styles.subTitle}>Manage global settings and admin permissions.</Text>
+        </Animated.View>
+
+        {/* Stats Grid */}
+        <View style={styles.statsGrid}>
+          {stats.map((stat, index) => (
+            <Animated.View 
+              key={index} 
+              entering={FadeInDown.delay(index * 100)} 
+              style={styles.statCard}
+            >
+              <View style={styles.statHeader}>
+                <View style={[styles.statIconBox, { backgroundColor: stat.color + '15' }]}>
+                  <Ionicons name={stat.icon as any} size={18} color={stat.color} />
+                </View>
+                <Text style={styles.trendText}>{stat.trend}</Text>
+              </View>
+              <Text style={styles.statLabel}>{stat.label}</Text>
+              <Text style={styles.statValue}>{stat.value}</Text>
+            </Animated.View>
+          ))}
+        </View>
+
+        {/* Pending Requests */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Access Requests</Text>
+          <TouchableOpacity><Text style={styles.linkText}>View All</Text></TouchableOpacity>
+        </View>
+
+        {adminRequests.map((req, index) => (
+          <Animated.View key={req.id} entering={FadeInLeft.delay(400 + index * 100)} style={styles.requestCard}>
+             <View style={styles.requestInfo}>
+                <Text style={styles.requestName}>{req.name}</Text>
+                <Text style={styles.requestEmail}>{req.email}</Text>
+                <View style={styles.typeBadge}>
+                  <Text style={styles.typeText}>{req.type}</Text>
+                </View>
+             </View>
+             <View style={styles.actionColumn}>
+                <TouchableOpacity style={styles.approveBtn}>
+                  <Ionicons name="checkmark" size={20} color="#FFF" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.rejectBtn}>
+                  <Ionicons name="close" size={20} color="#FFF" />
+                </TouchableOpacity>
+             </View>
+          </Animated.View>
+        ))}
+
+        {/* Global Controls */}
+        <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Global Controls</Text>
+        <View style={styles.controlGrid}>
+          {[
+            { label: 'App Settings', icon: 'settings', color: '#64748B' },
+            { label: 'Security Log', icon: 'lock-closed', color: '#EF4444' },
+            { label: 'Backup Data', icon: 'cloud-upload', color: '#3B82F6' },
+            { label: 'Audit Trail', icon: 'document-text', color: '#8B5CF6' },
+          ].map((item, index) => (
+            <TouchableOpacity key={index} style={styles.controlItem}>
+              <View style={[styles.controlIconBox, { backgroundColor: item.color + '15' }]}>
+                <Ionicons name={item.icon as any} size={22} color={item.color} />
+              </View>
+              <Text style={styles.controlLabel}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color="#EF4444" />
+          <Text style={styles.logoutBtnText}>Logout Securely</Text>
+        </TouchableOpacity>
+
       </ScrollView>
     </View>
   );
@@ -131,108 +143,127 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+    paddingTop: Constants.statusBarHeight,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  headerTop: {
+    height: 70,
+    backgroundColor: '#FFF',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 25,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  superTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
-  superSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontWeight: '600',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  profileBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  logoBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  notifBadge: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444',
-    borderWidth: 2,
-    borderColor: '#0A0F1F',
-  },
-  tabScroll: {
-    flexDirection: 'row',
-  },
-  tab: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    marginRight: 10,
-    borderRadius: 12,
-  },
-  activeTab: {
-    backgroundColor: Colors.primary,
-  },
-  tabText: {
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  activeTabText: {
+  logoLetter: {
     color: '#FFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  content: {
+  headerBrand: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1E293B',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  notifBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  profileBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#1E293B',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContent: {
     padding: 20,
   },
-  section: {
+  welcomeSection: {
     marginBottom: 25,
+  },
+  mainTitle: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#1E293B',
+  },
+  subTitle: {
+    fontSize: 14,
+    color: '#64748B',
+    marginTop: 4,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 15,
-    marginBottom: 25,
+    gap: 12,
+    marginBottom: 30,
   },
   statCard: {
-    width: (width - 55) / 2,
+    width: (width - 52) / 2,
     backgroundColor: '#FFF',
-    padding: 20,
+    padding: 16,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
   },
-  statIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    justifyContent: 'center',
+  statHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
-  statValue: {
-    fontSize: 20,
+  statIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  trendText: {
+    fontSize: 10,
     fontWeight: 'bold',
-    color: '#1E293B',
+    color: '#10B981',
   },
   statLabel: {
-    fontSize: 12,
-    color: '#64748B',
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#1E293B',
     marginTop: 4,
   },
   sectionHeader: {
@@ -246,26 +277,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1E293B',
   },
-  viewAllText: {
+  linkText: {
     fontSize: 14,
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  requestSection: {
-    marginTop: 10,
+    color: '#3B82F6',
+    fontWeight: 'bold',
   },
   requestCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     backgroundColor: '#FFF',
+    borderRadius: 20,
     padding: 15,
-    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#F1F5F9',
   },
   requestInfo: {
+    flex: 1,
     gap: 4,
   },
   requestName: {
@@ -277,62 +305,80 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
   },
-  actionRow: {
-    flexDirection: 'row',
+  typeBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 6,
+  },
+  typeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#475569',
+  },
+  actionColumn: {
     gap: 8,
   },
-  actionBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+  approveBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  menuGrid: {
+  rejectBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  controlGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 15,
-    marginTop: 15,
+    gap: 12,
+    marginTop: 10,
   },
-  menuItem: {
-    width: (width - 55) / 2,
+  controlItem: {
+    width: (width - 52) / 2,
     backgroundColor: '#FFF',
-    padding: 25,
+    padding: 20,
     borderRadius: 24,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
-  menuLabel: {
-    fontSize: 14,
+  controlIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  controlLabel: {
+    fontSize: 13,
     fontWeight: 'bold',
     color: '#1E293B',
-    marginTop: 12,
   },
-  alertCard: {
+  logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
     backgroundColor: '#FEF2F2',
-    padding: 20,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#FEE2E2',
-    marginTop: 15,
-    gap: 15,
+    marginTop: 30,
+    marginBottom: 20,
+    gap: 8,
   },
-  alertInfo: {
-    flex: 1,
-  },
-  alertTitle: {
+  logoutBtnText: {
+    color: '#EF4444',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#991B1B',
-  },
-  alertDesc: {
-    fontSize: 13,
-    color: '#B91C1C',
-    marginTop: 4,
   },
 });

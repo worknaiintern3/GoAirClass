@@ -77,8 +77,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#0A0F1F',
   },
   viewAll: {
@@ -92,10 +92,10 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#FFF',
-    borderRadius: 20,
-    padding: 16,
-    marginRight: 15,
-    width: 220,
+    borderRadius: 16,
+    padding: 14,
+    marginRight: 12,
+    width: 190,
     borderWidth: 1,
     borderColor: '#F1F5F9',
     shadowColor: '#000',
@@ -106,13 +106,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   typeIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 30,
+    height: 30,
+    borderRadius: 10,
     backgroundColor: '#F0F7FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   routeRow: {
     flexDirection: 'row',
@@ -120,8 +120,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   cityName: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '800',
     color: '#1E293B',
   },
   detailsRow: {

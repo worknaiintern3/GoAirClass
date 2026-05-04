@@ -60,7 +60,7 @@ export default function SuccessScreen() {
               <View style={styles.line} />
               <Ionicons name="bus-outline" size={16} color="#94A3B8" />
               <View style={styles.line} />
-              <View style={[styles.dot, { backgroundColor: Colors.accent }]} />
+              <View style={[styles.dot, { backgroundColor: Colors.secondary }]} />
             </View>
             <View style={[styles.cityInfo, { alignItems: 'flex-end' }]}>
               <Text style={styles.time}>06:45</Text>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: Colors.primary,
+    backgroundColor: '#0B2265',
   },
   line: {
     flex: 1,
@@ -228,14 +228,14 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   downloadBtn: {
-    backgroundColor: Colors.primary,
+    backgroundColor: '#0B2265',
     height: 56,
     borderRadius: 16,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 10,
-    shadowColor: Colors.primary,
+    shadowColor: '#0B2265',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 15,

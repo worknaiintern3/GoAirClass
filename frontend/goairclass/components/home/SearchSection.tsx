@@ -12,6 +12,10 @@ export const SearchSection = () => {
   const [activeTab, setActiveTab] = useState<'bus' | 'flight'>('bus');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDate, setSelectedDate] = useState('Select Date');
+  const [selectedDateISO, setSelectedDateISO] = useState('');
+  const [fromCity, setFromCity] = useState('');
+  const [toCity, setToCity] = useState('');
+  const [budget, setBudget] = useState('');
 
   // Dynamic Calendar State
   const [viewDate, setViewDate] = useState(new Date());
@@ -37,8 +41,11 @@ export const SearchSection = () => {
   const emptySlots = firstDay === 0 ? 6 : firstDay - 1;
 
   const tabIndicatorStyle = useAnimatedStyle(() => {
+    const tabWidth = 180;
+    const padding = 3;
+    const indicatorWidth = (tabWidth - padding * 2) / 2;
     return {
-      transform: [{ translateX: withSpring(activeTab === 'bus' ? 0 : (180 - 8) / 2) }],
+      transform: [{ translateX: withSpring(activeTab === 'bus' ? 0 : indicatorWidth) }],
     };
   });
 
@@ -53,70 +60,72 @@ export const SearchSection = () => {
           style={styles.tab}
           onPress={() => setActiveTab('bus')}
         >
-          <Ionicons name="bus" size={18} color={activeTab === 'bus' ? '#FFF' : '#64748B'} />
+          <Ionicons name="bus" size={18} color={activeTab === 'bus' ? '#FFF' : '#94A3B8'} />
           <Text style={[styles.tabText, activeTab === 'bus' && styles.activeTabText]}>Buses</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.tab}
           onPress={() => setActiveTab('flight')}
         >
-          <Ionicons name="airplane" size={18} color={activeTab === 'flight' ? '#FFF' : '#64748B'} />
+          <Ionicons name="airplane" size={18} color={activeTab === 'flight' ? '#FFF' : '#94A3B8'} />
           <Text style={[styles.tabText, activeTab === 'flight' && styles.activeTabText]}>Flights</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.searchBox}>
         <View style={styles.inputSection}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>From</Text>
-            <View style={styles.inputWrapper}>
-              <View style={styles.iconBox}>
-                <Ionicons name="location" size={20} color={Colors.primary} />
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder="Departure city"
-                placeholderTextColor="#94A3B8"
-              />
+        <View style={styles.inputGroup}>
+          <View style={styles.inputWrapper}>
+            <View style={styles.iconBox}>
+              <Ionicons name="location" size={20} color={Colors.primary} />
             </View>
-          </View>
-
-          <TouchableOpacity style={styles.swapBtn}>
-            <LinearGradient
-              colors={[Colors.primary, '#1E40AF']}
-              style={styles.swapGradient}
-            >
-              <Ionicons name="swap-vertical" size={20} color="#FFF" />
-            </LinearGradient>
-          </TouchableOpacity>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>To</Text>
-            <View style={styles.inputWrapper}>
-              <View style={styles.iconBox}>
-                <Ionicons name="navigate" size={20} color={Colors.primary} />
-              </View>
-              <TextInput
-                style={styles.input}
-                placeholder="Destination city"
-                placeholderTextColor="#94A3B8"
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="From City"
+              placeholderTextColor="#94A3B8"
+              value={fromCity}
+              onChangeText={setFromCity}
+            />
           </View>
         </View>
 
-        <View style={styles.divider} />
+        <TouchableOpacity style={styles.swapBtn}>
+          <LinearGradient
+            colors={[Colors.secondary, '#A07810']}
+            style={styles.swapGradient}
+          >
+            <Ionicons name="swap-vertical" size={20} color="#FFF" />
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <View style={styles.inputGroup}>
+          <View style={styles.inputWrapper}>
+            <View style={styles.iconBox}>
+              <Ionicons name="navigate" size={20} color={Colors.primary} />
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="To City"
+              placeholderTextColor="#94A3B8"
+              value={toCity}
+              onChangeText={setToCity}
+            />
+          </View>
+        </View>
+        </View>
+
 
         <View style={styles.row}>
           <View style={styles.secondaryInputGroup}>
-            <Text style={styles.label}>Budget (₹)</Text>
             <View style={styles.secondaryInputWrapper}>
               <Ionicons name="wallet-outline" size={18} color="#64748B" />
               <TextInput
                 style={styles.secondaryInputText}
-                placeholder="Max Budget"
+                placeholder="Budget (₹)"
                 placeholderTextColor="#94A3B8"
                 keyboardType="numeric"
+                value={budget}
+                onChangeText={setBudget}
               />
             </View>
           </View>
@@ -127,11 +136,10 @@ export const SearchSection = () => {
             style={styles.secondaryInputGroup}
             onPress={() => setShowDatePicker(true)}
           >
-            <Text style={styles.label}>Date</Text>
             <View style={styles.secondaryInputWrapper}>
               <Ionicons name="calendar-clear-outline" size={18} color="#64748B" />
               <Text style={[styles.secondaryInputText, selectedDate !== 'Select Date' && styles.selectedText]}>
-                {selectedDate}
+                {selectedDate === 'Select Date' ? 'Date' : selectedDate}
               </Text>
             </View>
           </TouchableOpacity>
@@ -179,7 +187,9 @@ export const SearchSection = () => {
                         key={i}
                         style={[styles.calendarDay, isSelected && styles.activeCalendarDay]}
                         onPress={() => {
+                          const isoDate = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
                           setSelectedDate(dateStr);
+                          setSelectedDateISO(isoDate);
                           setShowDatePicker(false);
                         }}
                       >
@@ -194,7 +204,10 @@ export const SearchSection = () => {
 
               <TouchableOpacity style={styles.todayBtn} onPress={() => {
                 const today = new Date();
-                setSelectedDate(`${today.getDate()} ${months[today.getMonth()].slice(0, 3)}, ${today.getFullYear()}`);
+                const dStr = `${today.getDate()} ${months[today.getMonth()].slice(0, 3)}, ${today.getFullYear()}`;
+                const isoDate = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
+                setSelectedDate(dStr);
+                setSelectedDateISO(isoDate);
                 setShowDatePicker(false);
               }}>
                 <Text style={styles.todayBtnText}>Select Today</Text>
@@ -205,18 +218,41 @@ export const SearchSection = () => {
 
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => router.push('/booking-results')}
+          onPress={() => {
+            if (!fromCity || !toCity) {
+              alert('Please enter both Departure and Destination cities.');
+              return;
+            }
+            if (selectedDate === 'Select Date') {
+              alert('Please select a travel date.');
+              return;
+            }
+
+            if (activeTab === 'flight') {
+              router.push({
+                pathname: '/flight-search-results',
+                params: {
+                  from: fromCity,
+                  to: toCity,
+                  date: selectedDateISO,
+                  maxPrice: budget
+                }
+              });
+            } else {
+              router.push('/booking-results');
+            }
+          }}
           style={styles.searchBtnContainer}
         >
           <LinearGradient
-            colors={[Colors.primary, '#1E40AF']}
+            colors={[Colors.primary, '#061640']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.searchBtn}
           >
             <Text style={styles.searchBtnText}>Search {activeTab === 'bus' ? 'Buses' : 'Flights'}</Text>
             <View style={styles.searchIconBox}>
-              <Ionicons name="arrow-forward" size={18} color={Colors.primary} />
+              <Ionicons name="arrow-forward" size={14} color={Colors.primary} />
             </View>
           </LinearGradient>
         </TouchableOpacity>
@@ -233,26 +269,28 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
-    padding: 4,
+    backgroundColor: '#FFF',
+    borderRadius: 18,
+    padding: 3,
     width: 180,
-    height: 48,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    height: 38,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
     shadowRadius: 12,
     elevation: 8,
     position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(226, 232, 240, 0.8)',
   },
   tabIndicator: {
     position: 'absolute',
-    top: 4,
-    left: 4,
-    width: (180 - 8) / 2,
-    height: 40,
+    top: 3,
+    left: 3,
+    width: (180 - 6) / 2,
+    height: 30,
     backgroundColor: Colors.primary,
-    borderRadius: 12,
+    borderRadius: 15,
   },
   tab: {
     flex: 1,
@@ -263,90 +301,82 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   tabText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
     color: '#64748B',
+    letterSpacing: 0.3,
   },
   activeTabText: {
     color: '#FFF',
   },
   searchBox: {
     backgroundColor: '#FFF',
-    borderRadius: 28,
-    padding: 24,
+    borderRadius: 22,
+    padding: 12,
     marginTop: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 15 },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 12,
+    shadowRadius: 20,
+    elevation: 8,
     borderWidth: 1,
-    borderColor: 'rgba(241, 245, 249, 0.5)',
+    borderColor: 'rgba(226, 232, 240, 0.6)',
   },
   inputSection: {
     position: 'relative',
   },
   inputGroup: {
-    marginBottom: 0,
-  },
-  label: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
     marginBottom: 8,
-    marginLeft: 4,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#F8FAFC',
-    borderRadius: 18,
-    height: 60,
-    paddingHorizontal: 16,
+    borderRadius: 12,
+    height: 44,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: '#F1F5F9',
   },
   iconBox: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 6,
     backgroundColor: '#EFF6FF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 14,
     color: '#1E293B',
     fontWeight: '600',
   },
   swapBtn: {
     position: 'absolute',
-    right: 20,
-    top: 68, // Positioned between From and To
+    right: 12,
+    top: 36, 
     zIndex: 10,
   },
   swapGradient: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: '#FFF',
     shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowRadius: 5,
+    elevation: 3,
   },
   divider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginVertical: 20,
+    marginVertical: 15,
   },
   row: {
     flexDirection: 'row',
@@ -377,27 +407,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 15,
   },
   searchBtnContainer: {
-    marginTop: 24,
+    marginTop: 15,
   },
   searchBtn: {
-    height: 64,
-    borderRadius: 20,
+    height: 40,
+    borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   searchBtnText: {
     color: '#FFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    letterSpacing: 0.5,
-    marginRight: 12,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    marginRight: 8,
+    textTransform: 'uppercase',
   },
   searchIconBox: {
-    width: 36,
-    height: 36,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 6,
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState, useEffect } from 'react';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,6 +9,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import CustomSplashScreen from '@/components/CustomSplashScreen';
 
 import { WebNavbar } from '@/components/web/Navbar';
+import { AuthProvider, useAuth } from '@/context/AuthContext';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -17,33 +18,29 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-export default function RootLayout() {
+function MainApp() {
   const colorScheme = useColorScheme();
-  const [isAppReady, setIsAppReady] = useState(false);
+  const { user, loading } = useAuth();
   const [showCustomSplash, setShowCustomSplash] = useState(true);
 
   useEffect(() => {
-    async function prepare() {
-      try {
-        // Pre-load fonts, make any API calls you need to do here
-        await new Promise(resolve => setTimeout(resolve, 500)); // Artificial delay for native splash
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        // Tell the application to render
-        setIsAppReady(true);
-        await SplashScreen.hideAsync();
+    // Only redirect once the splash screen is done and auth state is loaded
+    if (!showCustomSplash && !loading) {
+      if (!user) {
+        // Logged out users go to Home
+        router.replace('/(tabs)');
+      } else if (user.role === 'superadmin') {
+        router.replace('/super-admin');
+      } else if (user.role === 'admin') {
+        router.replace('/admin-dashboard');
+      } else {
+        // Logged in regular users go to Home
+        router.replace('/(tabs)');
       }
     }
+  }, [showCustomSplash, loading, user]);
 
-    prepare();
-  }, []);
-
-  if (!isAppReady) {
-    return null;
-  }
-
-  if (showCustomSplash) {
+  if (showCustomSplash || loading) {
     return <CustomSplashScreen onFinish={() => setShowCustomSplash(false)} />;
   }
 
@@ -68,3 +65,33 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+export default function RootLayout() {
+  const [isAppReady, setIsAppReady] = useState(false);
+
+  useEffect(() => {
+    async function prepare() {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setIsAppReady(true);
+        await SplashScreen.hideAsync();
+      }
+    }
+
+    prepare();
+  }, []);
+
+  if (!isAppReady) {
+    return null;
+  }
+
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
+  );
+}
+

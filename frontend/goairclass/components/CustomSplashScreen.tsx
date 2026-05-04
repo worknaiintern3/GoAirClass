@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View, Text, Image, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, Image, Dimensions, Platform } from 'react-native';
 import Animated, { 
   useSharedValue, 
   useAnimatedStyle, 
@@ -8,10 +8,13 @@ import Animated, {
   withSequence,
   withDelay,
   Easing,
-  interpolate
+  interpolate,
+  Extrapolate
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '../constants/theme';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,20 +24,20 @@ const AnimatedParticle = ({ delay }: { delay: number }) => {
   const opacity = useSharedValue(0);
 
   useEffect(() => {
-    opacity.value = withDelay(delay, withTiming(0.6, { duration: 1000 }));
+    opacity.value = withDelay(delay, withTiming(0.4, { duration: 1500 }));
     
     tx.value = withRepeat(
       withSequence(
-        withTiming(Math.random() * width, { duration: 5000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(Math.random() * width, { duration: 5000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) })
+        withTiming(Math.random() * width, { duration: 10000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) }),
+        withTiming(Math.random() * width, { duration: 10000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) })
       ),
       -1,
       true
     );
     ty.value = withRepeat(
       withSequence(
-        withTiming(Math.random() * height, { duration: 5000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(Math.random() * height, { duration: 5000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) })
+        withTiming(Math.random() * height, { duration: 10000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) }),
+        withTiming(Math.random() * height, { duration: 10000 + Math.random() * 5000, easing: Easing.inOut(Easing.quad) })
       ),
       -1,
       true
@@ -50,45 +53,47 @@ const AnimatedParticle = ({ delay }: { delay: number }) => {
 };
 
 const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
-  const logoScale = useSharedValue(0.8);
+  const logoScale = useSharedValue(0.5);
   const logoOpacity = useSharedValue(0);
   const textOpacity = useSharedValue(0);
   const loaderWidth = useSharedValue(0);
   const floatValue = useSharedValue(0);
-  const lightSweep = useSharedValue(-width);
+  
+  // Icon animations
+  const planePos = useSharedValue(-100);
+  const busPos = useSharedValue(width + 100);
+  const iconOpacity = useSharedValue(0);
 
   useEffect(() => {
-    // Logo Animation
-    logoScale.value = withTiming(1, { duration: 1000, easing: Easing.out(Easing.back(1.5)) });
+    // Logo entrance
+    logoScale.value = withTiming(1, { duration: 1200, easing: Easing.out(Easing.back(1.5)) });
     logoOpacity.value = withTiming(1, { duration: 1000 });
 
-    // Text Animation
-    textOpacity.value = withDelay(500, withTiming(1, { duration: 800 }));
+    // Text entrance
+    textOpacity.value = withDelay(600, withTiming(1, { duration: 800 }));
 
-    // Light Sweep Animation
-    lightSweep.value = withRepeat(
-      withTiming(width, { duration: 3000, easing: Easing.bezier(0.4, 0, 0.2, 1) }),
-      -1,
-      false
-    );
+    // Icons entrance
+    iconOpacity.value = withDelay(1000, withTiming(1, { duration: 800 }));
+    planePos.value = withDelay(1200, withTiming(width * 0.15, { duration: 1500, easing: Easing.out(Easing.exp) }));
+    busPos.value = withDelay(1200, withTiming(width * 0.7, { duration: 1500, easing: Easing.out(Easing.exp) }));
 
     // Floating Animation for Logo
     floatValue.value = withRepeat(
       withSequence(
-        withTiming(10, { duration: 2000, easing: Easing.inOut(Easing.quad) }),
-        withTiming(0, { duration: 2000, easing: Easing.inOut(Easing.quad) })
+        withTiming(15, { duration: 2500, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 2500, easing: Easing.inOut(Easing.sin) })
       ),
       -1,
       true
     );
 
-    // Loader Animation
-    loaderWidth.value = withTiming(width * 0.6, { duration: 3000 });
+    // Loader progress
+    loaderWidth.value = withTiming(width * 0.7, { duration: 3500 });
 
-    // Finish Splash
+    // Final Fade-out and Finish
     const timer = setTimeout(() => {
       onFinish();
-    }, 4000);
+    }, 4500);
 
     return () => clearTimeout(timer);
   }, []);
@@ -103,51 +108,66 @@ const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
 
   const textStyle = useAnimatedStyle(() => ({
     opacity: textOpacity.value,
-    transform: [{ translateY: interpolate(textOpacity.value, [0, 1], [20, 0]) }]
+    transform: [{ translateY: interpolate(textOpacity.value, [0, 1], [30, 0], Extrapolate.CLAMP) }]
   }));
 
   const loaderStyle = useAnimatedStyle(() => ({
     width: loaderWidth.value,
   }));
 
-  const lightStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: lightSweep.value }, { skewX: '-20deg' }]
+  const planeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: planePos.value }, { translateY: -40 }],
+    opacity: iconOpacity.value,
+  }));
+
+  const busStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: busPos.value }, { translateY: 40 }],
+    opacity: iconOpacity.value,
   }));
 
   return (
     <View style={styles.container}>
-      {/* Background Image with Gradient Overlay */}
+      {/* Premium Background */}
       <Image 
-        source={require('../assets/images/splash-bg.png')} 
+        source={require('../assets/images/splash-bg-premium.png')} 
         style={styles.bgImage}
         resizeMode="cover"
       />
       <LinearGradient
-        colors={['rgba(0, 87, 255, 0.3)', 'rgba(0, 198, 255, 0.6)']}
+        colors={['rgba(10, 15, 31, 0.4)', 'rgba(10, 15, 31, 0.85)']}
         style={styles.gradientOverlay}
       />
 
-      {/* Animated Floating Particles */}
+      {/* Subtle Floating Particles */}
       <View style={styles.particlesContainer}>
-        {[...Array(15)].map((_, i) => (
-          <AnimatedParticle key={i} delay={i * 100} />
+        {[...Array(20)].map((_, i) => (
+          <AnimatedParticle key={i} delay={i * 80} />
         ))}
       </View>
 
-      {/* Light Sweep Effect */}
-      <Animated.View style={[styles.lightSweep, lightStyle]}>
-        <LinearGradient
-          colors={['transparent', 'rgba(255, 255, 255, 0.1)', 'transparent']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={{ flex: 1 }}
-        />
+      {/* Moving Service Icons */}
+      <Animated.View style={[styles.serviceIcon, planeStyle]}>
+        <BlurView intensity={20} tint="light" style={styles.iconCircle}>
+          <Ionicons name="airplane" size={24} color="#FFF" />
+        </BlurView>
+        <Text style={styles.iconLabel}>FLIGHTS</Text>
+      </Animated.View>
+
+      <Animated.View style={[styles.serviceIcon, busStyle]}>
+        <BlurView intensity={20} tint="light" style={styles.iconCircle}>
+          <Ionicons name="bus" size={24} color="#FFF" />
+        </BlurView>
+        <Text style={styles.iconLabel}>BUSES</Text>
       </Animated.View>
 
       <View style={styles.content}>
-        {/* Glassmorphism Logo Container */}
+        {/* Glassmorphism Logo */}
         <Animated.View style={[styles.logoContainer, logoStyle]}>
-          <BlurView intensity={30} tint="light" style={styles.glassCircle}>
+          <BlurView intensity={40} tint="light" style={styles.glassCircle}>
+            <LinearGradient
+              colors={['rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.05)']}
+              style={StyleSheet.absoluteFill}
+            />
             <Image 
               source={require('../assets/images/logo.png')} 
               style={styles.logo}
@@ -156,19 +176,30 @@ const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
           </BlurView>
         </Animated.View>
 
-        {/* Brand Name & Tagline */}
+        {/* Branding */}
         <Animated.View style={[styles.textContainer, textStyle]}>
           <Text style={styles.brandName}>GOAIR CLASS</Text>
-          <Text style={styles.tagline}>Book Bus & Flights Instantly</Text>
+          <View style={styles.taglineWrapper}>
+            <View style={styles.line} />
+            <Text style={[styles.tagline, { color: Colors.secondary, fontWeight: 'bold' }]}>PREMIUM TRAVEL PARTNER</Text>
+            <View style={styles.line} />
+          </View>
         </Animated.View>
       </View>
 
-      {/* Bottom Section */}
+      {/* Progress Section */}
       <View style={styles.bottomSection}>
         <View style={styles.loaderBg}>
-          <Animated.View style={[styles.loaderFill, loaderStyle]} />
+          <Animated.View style={[styles.loaderFill, loaderStyle]}>
+            <LinearGradient
+              colors={['#3B82F6', '#60A5FA']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
         </View>
-        <Text style={styles.bottomText}>Smart Travel Starts Here</Text>
+        <Text style={styles.loadingText}>INITIALIZING PREMIUM EXPERIENCE...</Text>
       </View>
     </View>
   );
@@ -177,7 +208,7 @@ const CustomSplashScreen = ({ onFinish }: { onFinish: () => void }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0057FF',
+    backgroundColor: '#0A0F1F',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -194,88 +225,115 @@ const styles = StyleSheet.create({
   },
   particle: {
     position: 'absolute',
+    width: 3,
+    height: 3,
     backgroundColor: '#FFF',
-    borderRadius: 5,
-  },
-  lightSweep: {
-    position: 'absolute',
-    top: 0,
-    width: width * 0.5,
-    height: height,
-    backgroundColor: 'transparent',
-    zIndex: 1,
+    borderRadius: 1.5,
   },
   content: {
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 10,
   },
   logoContainer: {
-    marginBottom: 20,
+    marginBottom: 30,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 15,
+    shadowOffset: { width: 0, height: 15 },
+    shadowOpacity: 0.4,
+    shadowRadius: 25,
+    elevation: 20,
   },
   glassCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
     overflow: 'hidden',
   },
   logo: {
-    width: 90,
-    height: 90,
+    width: 160,
+    height: 160,
   },
   textContainer: {
     alignItems: 'center',
   },
   brandName: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 38,
+    fontWeight: '900',
     color: '#FFF',
-    letterSpacing: 2,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
+    letterSpacing: 4,
+    textShadowColor: 'rgba(11, 34, 101, 0.6)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 15,
+  },
+  taglineWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 10,
+  },
+  line: {
+    width: 20,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   tagline: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    marginTop: 8,
-    fontWeight: '500',
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '700',
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+  },
+  serviceIcon: {
+    position: 'absolute',
+    alignItems: 'center',
+    zIndex: 5,
+  },
+  iconCircle: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    overflow: 'hidden',
+  },
+  iconLabel: {
+    fontSize: 9,
+    color: '#FFF',
+    fontWeight: 'bold',
+    marginTop: 6,
     letterSpacing: 1,
   },
   bottomSection: {
     position: 'absolute',
-    bottom: 60,
+    bottom: 80,
     alignItems: 'center',
     width: '100%',
   },
   loaderBg: {
-    width: width * 0.6,
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
+    width: width * 0.7,
+    height: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 1.5,
     overflow: 'hidden',
     marginBottom: 20,
   },
   loaderFill: {
     height: '100%',
-    backgroundColor: '#FFF',
-    borderRadius: 2,
+    borderRadius: 1.5,
   },
-  bottomText: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.6)',
-    fontWeight: '400',
+  loadingText: {
+    fontSize: 10,
+    color: 'rgba(148, 163, 184, 0.8)',
+    fontWeight: 'bold',
     letterSpacing: 2,
-    textTransform: 'uppercase',
   },
 });
 

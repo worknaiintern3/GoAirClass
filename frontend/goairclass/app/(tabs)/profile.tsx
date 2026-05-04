@@ -6,15 +6,27 @@ import { router } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
+import { useAuth } from '@/context/AuthContext';
+
 export default function ProfileScreen() {
+  const { isLoggedIn, user, logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: 'John Doe',
+    name: user?.fullName || 'John Doe',
     email: 'john.doe@example.com',
-    phone: '+91 98765 43210'
+    phone: user?.mobileNumber || '+91 98765 43210'
   });
 
-  const isLoggedIn = false; 
+  // Update internal state if user changes
+  React.useEffect(() => {
+    if (user) {
+      setProfileData({
+        name: user.fullName,
+        email: 'user@goairclass.com', // Assuming email might be added later
+        phone: `+91 ${user.mobileNumber}`
+      });
+    }
+  }, [user]);
 
   if (!isLoggedIn) {
     return (
@@ -39,13 +51,18 @@ export default function ProfileScreen() {
     );
   }
 
+  const handleLogout = async () => {
+    await logout();
+    router.replace('/login');
+  };
+
   const menuItems = [
-    { icon: 'ticket-outline', label: 'My Bookings', color: '#F59E0B' },
+    { icon: 'ticket-outline', label: 'My Bookings', color: '#F59E0B', action: () => router.push('/my-bookings') },
     { icon: 'close-circle-outline', label: 'Cancel Tickets', color: '#EF4444' },
     { icon: 'wallet-outline', label: 'Wallet', color: '#10B981', value: '₹1,250' },
     { icon: 'notifications-outline', label: 'Notifications', color: '#6366F1' },
     { icon: 'settings-outline', label: 'Settings', color: '#64748B' },
-    { icon: 'log-out-outline', label: 'Logout', color: '#EF4444', hideArrow: true },
+    { icon: 'log-out-outline', label: 'Logout', color: '#EF4444', hideArrow: true, action: handleLogout },
   ];
 
   return (
@@ -55,7 +72,9 @@ export default function ProfileScreen() {
         <View style={styles.profileInfo}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>{profileData.name.split(' ').map(n => n[0]).join('')}</Text>
+              <Text style={styles.avatarText}>
+                {profileData.name ? profileData.name.split(' ').map(n => n[0]).join('') : 'U'}
+              </Text>
             </View>
             <TouchableOpacity style={styles.editBadge} onPress={() => setIsEditing(true)}>
               <Ionicons name="create" size={16} color="#FFF" />
@@ -70,81 +89,29 @@ export default function ProfileScreen() {
       {/* Stats Cards */}
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>12</Text>
+          <Text style={styles.statValue}>1</Text>
           <Text style={styles.statLabel}>Trips</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>4.8</Text>
+          <Text style={styles.statValue}>5.0</Text>
           <Text style={styles.statLabel}>Rating</Text>
         </View>
         <View style={styles.divider} />
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>Gold</Text>
+          <Text style={styles.statValue}>Silver</Text>
           <Text style={styles.statLabel}>Member</Text>
         </View>
-      </View>
-
-      {/* Edit Profile Form Overlay */}
-      {isEditing && (
-        <View style={styles.editOverlay}>
-          <View style={styles.editCard}>
-            <Text style={styles.editTitle}>Update Profile</Text>
-            <View style={styles.editForm}>
-              <Text style={styles.inputLabel}>Full Name</Text>
-              <TextInput 
-                style={styles.editInput} 
-                value={profileData.name} 
-                onChangeText={(t) => setProfileData({...profileData, name: t})}
-                placeholder="Full Name"
-              />
-              <Text style={styles.inputLabel}>Email Address</Text>
-              <TextInput 
-                style={styles.editInput} 
-                value={profileData.email} 
-                onChangeText={(t) => setProfileData({...profileData, email: t})}
-                placeholder="Email Address"
-                keyboardType="email-address"
-              />
-              <View style={styles.editBtnRow}>
-                <TouchableOpacity style={styles.cancelBtn} onPress={() => setIsEditing(false)}>
-                  <Text style={styles.cancelBtnText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.saveBtn} onPress={() => setIsEditing(false)}>
-                  <Text style={styles.saveBtnText}>Save Changes</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <TouchableOpacity style={styles.actionItem}>
-          <View style={[styles.actionIcon, { backgroundColor: '#EEF2FF' }]}>
-            <Ionicons name="download" size={20} color={Colors.primary} />
-          </View>
-          <Text style={styles.actionText}>Tickets</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionItem}>
-          <View style={[styles.actionIcon, { backgroundColor: '#FFF7ED' }]}>
-            <Ionicons name="gift" size={20} color="#F97316" />
-          </View>
-          <Text style={styles.actionText}>Coupons</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionItem}>
-          <View style={[styles.actionIcon, { backgroundColor: '#F0FDF4' }]}>
-            <Ionicons name="headset" size={20} color="#22C55E" />
-          </View>
-          <Text style={styles.actionText}>Support</Text>
-        </TouchableOpacity>
       </View>
 
       {/* Menu List */}
       <View style={styles.menuContainer}>
         {menuItems.map((item, index) => (
-          <TouchableOpacity key={index} style={styles.menuItem}>
+          <TouchableOpacity 
+            key={index} 
+            style={styles.menuItem}
+            onPress={item.action}
+          >
             <View style={[styles.menuIconContainer, { backgroundColor: item.color + '15' }]}>
               <Ionicons name={item.icon as any} size={22} color={item.color} />
             </View>
@@ -158,17 +125,6 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         ))}
       </View>
-
-      {/* Refer Banner */}
-      <TouchableOpacity style={styles.referBanner}>
-        <View style={styles.referContent}>
-          <Text style={styles.referTitle}>Refer & Earn ₹500</Text>
-          <Text style={styles.referSubtitle}>Invite friends to GOAIR CLASS</Text>
-        </View>
-        <View style={styles.referBadge}>
-          <Ionicons name="share-social" size={20} color="#FFF" />
-        </View>
-      </TouchableOpacity>
 
       {/* Footer Info */}
       <View style={styles.footer}>

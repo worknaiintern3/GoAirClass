@@ -1,43 +1,93 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Image } from 'react-native';
+import { StyleSheet, View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Image, ScrollView } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 
+import { API_BASE_URL } from '@/constants/api';
+
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState<'user' | 'operator' | 'admin'>('user');
+  const [fullName, setFullName] = useState('');
+  const [isRegister, setIsRegister] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const phoneInputRef = React.useRef<TextInput>(null);
+  const handleContinue = async () => {
+    if (phone.length < 10) return;
+    if (isRegister && !fullName) {
+      alert('Please enter your full name');
+      return;
+    }
 
-  const roles = [
-    { id: 'user', label: 'User', icon: 'person' },
-    { id: 'operator', label: 'Operator', icon: 'bus' },
-    { id: 'admin', label: 'Admin', icon: 'shield-checkmark' },
-  ];
+    try {
+      setLoading(true);
+      const endpoint = isRegister ? '/auth/send-registration-otp' : '/auth/send-otp';
+      const payload = isRegister 
+        ? { fullName, mobileNumber: phone, captchaToken: "mock-token" }
+        : { mobileNumber: phone };
 
-  const handleLogin = () => {
-    router.push({ pathname: '/otp', params: { role } });
+      console.log(`[Auth] Calling ${endpoint}`, payload);
+      
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Bypass-Tunnel-Reminder': 'true',
+          'localtunnel-bypass-reminder': 'true',
+          'User-Agent': 'GoAirClass-Mobile'
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const result = await response.json();
+      console.log(`[Auth] ${endpoint} result:`, result);
+
+      if (result.success) {
+        router.push({ 
+          pathname: '/otp', 
+          params: { 
+            phone, 
+            isRegister: isRegister ? 'true' : 'false',
+            fullName: isRegister ? fullName : '',
+            autoOtp: result.otp 
+          } 
+        });
+      } else {
+        alert(result.message || 'Failed to send OTP');
+      }
+    } catch (error: any) {
+      console.error('[Auth] Error:', error);
+      alert('Network error. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={styles.container}
     >
       <LinearGradient
-        colors={[Colors.primary, '#1E293B']}
+        colors={['#0B2265', Colors.secondary]}
         style={styles.header}
       >
         <Animated.View entering={FadeInUp.delay(200).duration(800)} style={styles.logoContainer}>
           <View style={styles.logoCircle}>
-            <Ionicons name="airplane" size={45} color={Colors.primary} />
+            <Image 
+              source={require('@/assets/images/logo.png')} 
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.brandName}>GOAIR CLASS</Text>
-          <Text style={styles.tagline}>PREMIUM TRAVEL ECOSYSTEM</Text>
+          <View style={styles.taglineWrapper}>
+            <View style={styles.line} />
+            <Text style={[styles.tagline, { color: '#FFF', fontWeight: 'bold' }]}>PREMIUM TRAVEL PARTNER</Text>
+            <View style={styles.line} />
+          </View>
         </Animated.View>
       </LinearGradient>
 
@@ -45,64 +95,77 @@ export default function LoginScreen() {
         entering={FadeInDown.delay(400).duration(800)} 
         style={styles.formContainer}
       >
-        <Text style={styles.welcomeText}>Login to Account</Text>
-        <Text style={styles.instructionText}>Pick your role to get started</Text>
-
-        <View style={styles.roleSelector}>
-          {roles.map((r) => (
-            <TouchableOpacity 
-              key={r.id} 
-              style={[styles.roleBtn, role === r.id && styles.activeRoleBtn]}
-              onPress={() => setRole(r.id as any)}
-            >
-              <View style={[styles.roleIconBox, role === r.id && styles.activeRoleIconBox]}>
-                <Ionicons 
-                  name={r.icon as any} 
-                  size={16} 
-                  color={role === r.id ? '#FFF' : '#94A3B8'} 
-                />
-              </View>
-              <Text style={[styles.roleLabel, role === r.id && styles.activeRoleLabel]}>{r.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity 
-          activeOpacity={1}
-          style={[styles.inputWrapper, isFocused && styles.inputFocused]}
-          onPress={() => phoneInputRef.current?.focus()}
+        <ScrollView 
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1 }}
         >
-          <View style={styles.countryCode}>
-            <Text style={styles.countryCodeText}>+91</Text>
+          <Text style={styles.welcomeText}>{isRegister ? 'Create Account' : 'Login to Account'}</Text>
+          <Text style={styles.instructionText}>
+            {isRegister ? 'Enter details to join us' : 'Enter your mobile number to continue'}
+          </Text>
+
+          {isRegister && (
+            <View style={[styles.inputWrapper, { marginBottom: 15 }]}>
+              <Ionicons name="person-outline" size={20} color="#94A3B8" style={{ marginRight: 10 }} />
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#94A3B8"
+                value={fullName}
+                onChangeText={setFullName}
+              />
+            </View>
+          )}
+
+          <TouchableOpacity 
+            activeOpacity={1}
+            style={[styles.inputWrapper, isFocused && styles.inputFocused]}
+            onPress={() => phoneInputRef.current?.focus()}
+          >
+            <View style={styles.countryCode}>
+              <Text style={styles.countryCodeText}>+91</Text>
+            </View>
+            <View style={styles.divider} />
+            <TextInput
+              ref={phoneInputRef}
+              style={styles.input}
+              placeholder="Mobile Number"
+              placeholderTextColor="#94A3B8"
+              keyboardType="phone-pad"
+              maxLength={10}
+              value={phone}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              onChangeText={setPhone}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.loginBtn, (phone.length < 10 || loading) && styles.disabledBtn]}
+            onPress={handleContinue}
+            disabled={phone.length < 10 || loading}
+          >
+            <Text style={styles.loginBtnText}>
+              {loading ? 'Sending...' : 'Continue to OTP'}
+            </Text>
+            {!loading && <Ionicons name="chevron-forward" size={20} color="#FFF" />}
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={{ marginTop: 20, alignItems: 'center' }}
+            onPress={() => setIsRegister(!isRegister)}
+          >
+            <Text style={styles.footerText}>
+              {isRegister ? 'Already have an account? ' : "Don't have an account? "}
+              <Text style={styles.linkText}>{isRegister ? 'Login' : 'Create one'}</Text>
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Secure Login Powered by </Text>
+            <Text style={[styles.footerText, { fontWeight: 'bold', color: Colors.primary }]}>GOAIR Auth</Text>
           </View>
-          <View style={styles.divider} />
-          <TextInput
-            ref={phoneInputRef}
-            style={styles.input}
-            placeholder="Mobile Number"
-            placeholderTextColor="#94A3B8"
-            keyboardType="phone-pad"
-            maxLength={10}
-            value={phone}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onChangeText={setPhone}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.loginBtn, (phone.length < 10) && styles.disabledBtn]}
-          onPress={handleLogin}
-          disabled={phone.length < 10}
-        >
-          <Text style={styles.loginBtnText}>Continue to OTP</Text>
-          <Ionicons name="chevron-forward" size={20} color="#FFF" />
-        </TouchableOpacity>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Secure Login Powered by </Text>
-          <Text style={[styles.footerText, { fontWeight: 'bold', color: Colors.primary }]}>GOAIR Auth</Text>
-        </View>
+        </ScrollView>
       </Animated.View>
     </KeyboardAvoidingView>
   );
@@ -114,7 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    height: '45%',
+    height: '35%',
     justifyContent: 'center',
     alignItems: 'center',
     borderBottomLeftRadius: 40,
@@ -124,35 +187,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoCircle: {
-    width: 100,
+    width: 200,
     height: 100,
-    borderRadius: 50,
+    borderRadius: 20,
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
+    marginBottom: 10,
+    textShadowColor: 'rgba(11, 34, 101, 0.6)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 15,
     shadowRadius: 15,
   },
-  logo: {
-    width: 60,
+  logoImage: {
+    width: 140,
     height: 60,
   },
+  taglineWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  line: {
+    height: 1,
+    width: 20,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    marginHorizontal: 10,
+  },
   brandName: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFF',
     letterSpacing: 1,
   },
   tagline: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'rgba(255, 255, 255, 0.8)',
     marginTop: 5,
   },
   formContainer: {
-    flex: 1,
     marginTop: -40,
     backgroundColor: '#FFF',
     marginHorizontal: 25,
@@ -163,7 +236,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 30,
     elevation: 10,
-    marginBottom: 50,
+    marginBottom: 20,
   },
   welcomeText: {
     fontSize: 24,

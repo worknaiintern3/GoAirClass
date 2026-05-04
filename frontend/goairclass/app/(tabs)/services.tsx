@@ -47,7 +47,7 @@ export default function ServicesScreen() {
       title: 'Business Class',
       desc: 'Premium comfort and exclusive lounge access.',
       icon: 'star',
-      color: '#F59E0B',
+      color: Colors.secondary,
       image: 'https://images.unsplash.com/photo-1540339832862-4745a61b51c3?q=80&w=800&auto=format&fit=crop',
     }
   ];
@@ -81,7 +81,7 @@ export default function ServicesScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[Colors.primary, '#1E3A8A']}
+        colors={['#0B2265', '#1E3A8A']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   activeTabLabel: {
-    color: Colors.primary,
+    color: '#0B2265',
   },
   content: {
     flex: 1,

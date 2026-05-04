@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import { StyleSheet, ScrollView, View, Text, TouchableOpacity, ActivityIndicator, RefreshControl, Platform } from 'react-native';
 import { HeroBanner } from '../../components/home/HeroBanner';
 import { SearchSection } from '../../components/home/SearchSection';
 import { DestinationSection } from '../../components/home/DestinationSection';
@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
+import { MainHeader } from '../../components/home/MainHeader';
 import { ENDPOINTS } from '@/constants/api';
 
 export default function HomeScreen() {
@@ -29,13 +30,21 @@ export default function HomeScreen() {
   const fetchData = async () => {
     console.log("Starting to fetch homepage data...");
     try {
+      const fetchOptions = {
+        headers: { 
+          'Bypass-Tunnel-Reminder': 'true',
+          'localtunnel-bypass-reminder': 'true',
+          'User-Agent': 'GoAirClass-Mobile'
+        }
+      };
+      
       const results = await Promise.allSettled([
-        fetch(ENDPOINTS.HERO_IMAGES).then(res => res.json()),
-        fetch(ENDPOINTS.POPULAR_ROUTES).then(res => res.json()),
-        fetch(ENDPOINTS.PUBLIC_COUPONS).then(res => res.json()),
-        fetch(ENDPOINTS.PUBLIC_DESTINATIONS).then(res => res.json()),
-        fetch(ENDPOINTS.VIDEO_CONTENT).then(res => res.json()),
-        fetch(ENDPOINTS.TESTIMONIALS).then(res => res.json())
+        fetch(ENDPOINTS.HERO_IMAGES, fetchOptions).then(res => res.json()),
+        fetch(ENDPOINTS.POPULAR_ROUTES, fetchOptions).then(res => res.json()),
+        fetch(ENDPOINTS.PUBLIC_COUPONS, fetchOptions).then(res => res.json()),
+        fetch(ENDPOINTS.PUBLIC_DESTINATIONS, fetchOptions).then(res => res.json()),
+        fetch(ENDPOINTS.VIDEO_CONTENT, fetchOptions).then(res => res.json()),
+        fetch(ENDPOINTS.TESTIMONIALS, fetchOptions).then(res => res.json())
       ]);
 
       const [heroRes, routesRes, couponsRes, destsRes, videoRes, testimonialsRes] = results;
@@ -95,6 +104,7 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
+      <MainHeader />
       <ScrollView 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -102,6 +112,7 @@ export default function HomeScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary} />
         }
       >
+        
         {/* Hero Section */}
         <HeroBanner images={data.heroImages} />
 
@@ -118,8 +129,8 @@ export default function HomeScreen() {
               <Text style={styles.quickLabel}>Buses</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickServiceItem} onPress={() => router.push('/(tabs)/services')}>
-              <View style={[styles.quickIcon, { backgroundColor: '#FFF7ED' }]}>
-                <Ionicons name="airplane" size={24} color="#FF7A00" />
+              <View style={[styles.quickIcon, { backgroundColor: '#FFFBEB' }]}>
+                <Ionicons name="airplane" size={24} color={Colors.secondary} />
               </View>
               <Text style={styles.quickLabel}>Flights</Text>
             </TouchableOpacity>
@@ -130,8 +141,8 @@ export default function HomeScreen() {
               <Text style={styles.quickLabel}>Places</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.quickServiceItem} onPress={() => router.push('/contact')}>
-              <View style={[styles.quickIcon, { backgroundColor: '#F5F3FF' }]}>
-                <Ionicons name="headset" size={24} color="#8B5CF6" />
+              <View style={[styles.quickIcon, { backgroundColor: '#FEF3C7' }]}>
+                <Ionicons name="headset" size={24} color={Colors.secondary} />
               </View>
               <Text style={styles.quickLabel}>Support</Text>
             </TouchableOpacity>
@@ -173,8 +184,8 @@ export default function HomeScreen() {
               <Text style={styles.featureLabel}>Instant Booking</Text>
             </View>
             <View style={styles.featureItem}>
-              <View style={[styles.featureIcon, { backgroundColor: '#FFF7ED' }]}>
-                <Ionicons name="headset" size={24} color="#F59E0B" />
+              <View style={[styles.featureIcon, { backgroundColor: '#FEF3C7' }]}>
+                <Ionicons name="headset" size={24} color="#D97706" />
               </View>
               <Text style={styles.featureLabel}>24/7 Support</Text>
             </View>
@@ -189,7 +200,7 @@ export default function HomeScreen() {
         {/* Download App CTA */}
         <View style={styles.downloadSection}>
           <LinearGradient 
-            colors={[Colors.primary, '#1E3A8A']} 
+            colors={['#0B2265', '#1E3A8A']} 
             style={styles.downloadCard}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -262,6 +273,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 0,
+    paddingTop: Platform.OS === 'ios' ? 160 : 140, 
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -272,17 +284,17 @@ const styles = StyleSheet.create({
   },
   quickServicesCard: {
     backgroundColor: '#FFF',
-    marginHorizontal: 20,
-    marginTop: 25,
-    borderRadius: 24,
-    paddingVertical: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    marginHorizontal: 15,
+    marginTop: 20,
+    borderRadius: 30,
+    paddingVertical: 25,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    elevation: 4,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#F8FAFC',
   },
   quickServices: {
     flexDirection: 'row',
@@ -302,9 +314,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   quickLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '800',
     color: '#475569',
+    textTransform: 'uppercase',
+    marginTop: 4,
   },
   sectionTitle: {
     fontSize: 20,

@@ -1,10 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ImageBackground, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, View, Text, Image, Dimensions, FlatList, TouchableOpacity, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
-import { ENDPOINTS, getImageUrl } from '@/constants/api';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withTiming, 
+  Easing,
+  interpolate,
+  Extrapolate,
+  useAnimatedScrollHandler
+} from 'react-native-reanimated';
+import { getImageUrl } from '@/constants/api';
+import { Colors } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
+const ITEM_WIDTH = width;
+const ITEM_HEIGHT = height * 0.3;
 
 interface HeroImage {
   url: string;
@@ -14,119 +26,178 @@ interface HeroImage {
 
 export const HeroBanner = ({ images }: { images: HeroImage[] }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollX = useSharedValue(0);
+  const flatListRef = useRef<FlatList>(null);
+  
+  const displayImages = images && images.length > 0 
+    ? images 
+    : [
+        { url: '', title: "Premium Travel", subtitle: "Explore India with GoAirClass" },
+        { url: '', title: "Luxury Buses", subtitle: "Comfortable journeys at best prices" },
+        { url: '', title: "Fast Flights", subtitle: "Fly high with exclusive deals" }
+      ];
 
   useEffect(() => {
-    if (images && images.length > 1) {
-      const timer = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % images.length);
-      }, 5000);
-      return () => clearInterval(timer);
-    }
-  }, [images]);
+    const timer = setInterval(() => {
+      if (currentIndex < displayImages.length - 1) {
+        flatListRef.current?.scrollToIndex({ index: currentIndex + 1, animated: true });
+      } else {
+        flatListRef.current?.scrollToIndex({ index: 0, animated: true });
+      }
+    }, 5000);
 
-  const currentImage = images && images.length > 0 
-    ? { uri: getImageUrl(images[currentIndex].url) as string } 
-    : require('../../assets/images/hero-banner.png');
+    return () => clearInterval(timer);
+  }, [currentIndex, displayImages.length]);
 
-  const currentTitle = images && images[currentIndex]?.title || "Smart Travel Starts Here";
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollX.value = event.contentOffset.x;
+  });
+
+  const renderItem = ({ item, index }: { item: HeroImage; index: number }) => {
+    const imageSource = item.url 
+      ? { uri: getImageUrl(item.url) } 
+      : require('../../assets/images/hero-banner.png');
+
+    return (
+      <View style={styles.itemContainer}>
+        <Image source={imageSource} style={styles.image} resizeMode="cover" />
+        
+        <LinearGradient
+          colors={['transparent', 'rgba(11, 34, 101, 0.4)', 'rgba(11, 34, 101, 0.9)']}
+          style={styles.gradient}
+        >
+          <View style={styles.content}>
+            <View style={styles.badge}>
+              <Ionicons name="flash" size={12} color={Colors.secondary} />
+              <Text style={styles.badgeText}>SPECIAL OFFER</Text>
+            </View>
+            
+            <Text style={styles.title}>{item.title || "Smart Travel Starts Here"}</Text>
+            <Text style={styles.subtitle}>{item.subtitle || "Book Luxury Buses & Flights Instantly"}</Text>
+            
+          </View>
+        </LinearGradient>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <Animated.View key={currentIndex} entering={FadeIn.duration(1000)} style={StyleSheet.absoluteFill}>
-        <ImageBackground
-          source={currentImage}
-          style={styles.image}
-          resizeMode="cover"
-        >
-          <LinearGradient
-            colors={['rgba(10, 15, 31, 0.4)', 'rgba(0, 87, 255, 0.6)']}
-            style={styles.gradient}
-          >
-            <View style={styles.content}>
-              <Animated.Text 
-                entering={FadeInDown.delay(200).duration(800)} 
-                style={styles.title}
-              >
-                {currentTitle}
-              </Animated.Text>
-              <Animated.Text 
-                entering={FadeInDown.delay(400).duration(800)} 
-                style={styles.subtitle}
-              >
-                Book Luxury Buses & Flights Instantly
-              </Animated.Text>
-            </View>
-          </LinearGradient>
-        </ImageBackground>
-      </Animated.View>
+      <Animated.FlatList
+        ref={flatListRef}
+        data={displayImages}
+        renderItem={renderItem}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onMomentumScrollEnd={(event) => {
+          setCurrentIndex(Math.round(event.nativeEvent.contentOffset.x / width));
+        }}
+      />
       
-      {images && images.length > 1 && (
-        <View style={styles.indicators}>
-          {images.map((_, i) => (
-            <View 
-              key={i} 
-              style={[
-                styles.indicator, 
-                i === currentIndex && styles.activeIndicator
-              ]} 
+      <View style={styles.indicatorContainer}>
+        {displayImages.map((_, index) => {
+          const animatedStyle = useAnimatedStyle(() => {
+            const widthVal = interpolate(
+              scrollX.value,
+              [(index - 1) * ITEM_WIDTH, index * ITEM_WIDTH, (index + 1) * ITEM_WIDTH],
+              [4, 12, 4],
+              Extrapolate.CLAMP
+            );
+            const opacity = interpolate(
+              scrollX.value,
+              [(index - 1) * ITEM_WIDTH, index * ITEM_WIDTH, (index + 1) * ITEM_WIDTH],
+              [0.4, 1, 0.4],
+              Extrapolate.CLAMP
+            );
+            return {
+              width: widthVal,
+              opacity: opacity,
+            };
+          });
+
+          return (
+            <Animated.View 
+              key={index} 
+              style={[styles.indicator, animatedStyle]} 
             />
-          ))}
-        </View>
-      )}
+          );
+        })}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    height: 320,
+    height: ITEM_HEIGHT,
     width: '100%',
-    overflow: 'hidden',
-    borderBottomLeftRadius: 35,
-    borderBottomRightRadius: 35,
+    backgroundColor: '#000',
+  },
+  itemContainer: {
+    width: ITEM_WIDTH,
+    height: ITEM_HEIGHT,
   },
   image: {
-    flex: 1,
+    width: '100%',
+    height: '100%',
   },
   gradient: {
-    flex: 1,
-    justifyContent: 'center',
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-start',
+    paddingTop: ITEM_HEIGHT * 0.35, 
     paddingHorizontal: 20,
   },
   content: {
-    marginTop: 60,
+    marginBottom: 10,
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 20,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  badgeText: {
+    color: Colors.secondary,
+    fontSize: 9,
+    fontWeight: '900',
+    marginLeft: 4,
+    letterSpacing: 1,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#FFF',
+    lineHeight: 28,
     textShadowColor: 'rgba(0, 0, 0, 0.5)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
-    lineHeight: 40,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
-    marginTop: 10,
+    marginTop: 4,
+    marginBottom: 15,
     fontWeight: '500',
-    letterSpacing: 0.5,
   },
-  indicators: {
+  indicatorContainer: {
     flexDirection: 'row',
     position: 'absolute',
     bottom: 20,
-    alignSelf: 'center',
+    right: 20,
     gap: 6,
   },
   indicator: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  activeIndicator: {
-    width: 20,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#FFF',
   },
 });
